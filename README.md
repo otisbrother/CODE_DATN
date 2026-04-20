@@ -76,12 +76,12 @@ Elearning/
 | Auth | POST | /api/auth/login | Public |
 | Auth | GET | /api/auth/profile | Auth |
 | Users | GET/PUT/DELETE | /api/users | Admin |
-| Courses | CRUD | /api/courses | Lecturer/Admin |
+| Courses | CRUD | /api/courses | Lecturer |
 | Enrollments | POST /api/enrollments | Student |
 | Enrollments | GET | /api/enrollments/my | Student |
-| Lessons | CRUD | /api/lessons | Lecturer/Admin |
+| Lessons | CRUD | /api/lessons | Lecturer |
 | Materials | POST | /api/lessons/:id/materials | Lecturer |
-| Assignments | CRUD | /api/assignments | Lecturer/Admin |
+| Assignments | CRUD | /api/assignments | Lecturer |
 | Submissions | POST | /api/assignments/submit | Student |
 | Grading | POST | /api/assignments/grade | Lecturer |
 | Progress | GET | /api/progress/my | Student |
