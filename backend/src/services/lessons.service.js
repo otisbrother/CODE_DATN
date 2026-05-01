@@ -1,5 +1,6 @@
 const lessonsRepo = require('../repositories/lessons.repository');
 const coursesRepo = require('../repositories/courses.repository');
+const sectionsRepo = require('../repositories/sections.repository');
 
 const getByCourse = async (courseId) => {
   return await lessonsRepo.findByCourse(courseId);
@@ -17,6 +18,13 @@ const create = async (data, userId, userRole) => {
   if (userRole === 'lecturer' && course.lecturer_id !== userId) {
     const e = new Error('Bạn không có quyền thêm bài học cho khóa học này'); e.statusCode = 403; throw e;
   }
+  // Validate section belongs to course
+  if (data.section_id) {
+    const section = await sectionsRepo.findById(data.section_id);
+    if (!section || section.course_id !== data.course_id) {
+      const e = new Error('Chương không thuộc khóa học này'); e.statusCode = 400; throw e;
+    }
+  }
   const id = await lessonsRepo.create(data);
   return await lessonsRepo.findById(id);
 };
@@ -26,6 +34,13 @@ const update = async (id, data, userId, userRole) => {
   const course = await coursesRepo.findById(lesson.course_id);
   if (userRole === 'lecturer' && course.lecturer_id !== userId) {
     const e = new Error('Bạn không có quyền chỉnh sửa bài học này'); e.statusCode = 403; throw e;
+  }
+  // Validate section belongs to course if changing section
+  if (data.section_id) {
+    const section = await sectionsRepo.findById(data.section_id);
+    if (!section || section.course_id !== lesson.course_id) {
+      const e = new Error('Chương không thuộc khóa học này'); e.statusCode = 400; throw e;
+    }
   }
   await lessonsRepo.update(id, data);
   return await lessonsRepo.findById(id);

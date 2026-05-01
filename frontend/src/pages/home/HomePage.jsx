@@ -22,9 +22,14 @@ export default function HomePage() {
   const [courses, setCourses] = useState([]);
   const [currentSlide, setCurrentSlide] = useState(0);
   const [showLogin, setShowLogin] = useState(false);
+  const [showRegister, setShowRegister] = useState(false);
   const [loginForm, setLoginForm] = useState({ email: '', password: '' });
   const [loginError, setLoginError] = useState('');
   const [loginLoading, setLoginLoading] = useState(false);
+  const [registerForm, setRegisterForm] = useState({ full_name: '', email: '', password: '', confirmPassword: '' });
+  const [registerError, setRegisterError] = useState('');
+  const [registerLoading, setRegisterLoading] = useState(false);
+  const [pendingCourseId, setPendingCourseId] = useState(null);
   const { isAuthenticated, user, setAuth } = useAuthStore();
   const navigate = useNavigate();
   const intervalRef = useRef(null);
@@ -59,9 +64,10 @@ export default function HomePage() {
 
   const handleCourseClick = (courseId) => {
     if (!isAuthenticated) {
+      setPendingCourseId(courseId);
       requireLogin();
     } else {
-      navigate(`/${user.role === 'student' ? 'student' : user.role}/course/${courseId}`);
+      navigate(`/student/course/${courseId}`);
     }
   };
 
@@ -74,11 +80,59 @@ export default function HomePage() {
       const { user: u, token } = res.data.data;
       setAuth(u, token);
       setShowLogin(false);
-      navigate(`/${u.role}`);
+      if (pendingCourseId) {
+        navigate(`/student/course/${pendingCourseId}`);
+        setPendingCourseId(null);
+      } else {
+        navigate(`/${u.role}`);
+      }
     } catch (err) {
       setLoginError(err.response?.data?.message || 'Email hoặc mật khẩu không đúng');
     }
     setLoginLoading(false);
+  };
+
+  const openRegister = () => {
+    setShowLogin(false);
+    setShowRegister(true);
+    setRegisterError('');
+    setRegisterForm({ full_name: '', email: '', password: '', confirmPassword: '' });
+  };
+
+  const openLogin = () => {
+    setShowRegister(false);
+    setShowLogin(true);
+    setLoginError('');
+    setLoginForm({ email: '', password: '' });
+  };
+
+  const handleRegister = async (e) => {
+    e.preventDefault();
+    if (registerForm.password !== registerForm.confirmPassword) {
+      setRegisterError('Mật khẩu xác nhận không khớp');
+      return;
+    }
+    setRegisterLoading(true);
+    setRegisterError('');
+    try {
+      const res = await authService.register({
+        full_name: registerForm.full_name,
+        email: registerForm.email,
+        password: registerForm.password,
+      });
+      const { user: u, token } = res.data.data;
+      setAuth(u, token);
+      setShowRegister(false);
+      if (pendingCourseId) {
+        navigate(`/student/course/${pendingCourseId}`);
+        setPendingCourseId(null);
+      } else {
+        navigate(`/${u.role}`);
+      }
+    } catch (err) {
+      setRegisterError(err.response?.data?.message || 'Đăng ký thất bại');
+    }
+    setRegisterLoading(false);
   };
 
   return (
@@ -98,7 +152,7 @@ export default function HomePage() {
             ) : (
               <>
                 <button className="btn btn-outline" style={{ color: '#4f46e5', borderColor: '#4f46e5' }} onClick={requireLogin}>Đăng nhập</button>
-                <Link to="/register" className="btn btn-primary">Đăng ký</Link>
+                <button className="btn btn-primary" onClick={openRegister}>Đăng ký</button>
               </>
             )}
           </div>
@@ -145,7 +199,50 @@ export default function HomePage() {
               </button>
             </form>
             <div className="login-modal-footer">
-              Chưa có tài khoản? <Link to="/register" onClick={() => setShowLogin(false)}>Đăng ký ngay</Link>
+              Chưa có tài khoản? <a href="#" onClick={(e) => { e.preventDefault(); openRegister(); }}>Đăng ký ngay</a>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* REGISTER POPUP MODAL */}
+      {showRegister && (
+        <div className="modal-overlay login-modal-overlay" onClick={() => setShowRegister(false)}>
+          <div className="login-modal" onClick={(e) => e.stopPropagation()}>
+            <button className="modal-close" onClick={() => setShowRegister(false)}>×</button>
+            <div className="login-modal-header">
+              <div className="login-modal-icon">🎓</div>
+              <h2>Đăng ký tài khoản</h2>
+              <p>Tạo tài khoản học viên mới</p>
+            </div>
+            {registerError && <div className="login-modal-error">{registerError}</div>}
+            <form onSubmit={handleRegister}>
+              <div className="form-group">
+                <label>Họ và tên</label>
+                <input type="text" className="form-control" placeholder="Nhập họ tên..."
+                  value={registerForm.full_name} onChange={(e) => setRegisterForm({ ...registerForm, full_name: e.target.value })} required autoFocus />
+              </div>
+              <div className="form-group">
+                <label>Email</label>
+                <input type="email" className="form-control" placeholder="Nhập email..."
+                  value={registerForm.email} onChange={(e) => setRegisterForm({ ...registerForm, email: e.target.value })} required />
+              </div>
+              <div className="form-group">
+                <label>Mật khẩu</label>
+                <input type="password" className="form-control" placeholder="Ít nhất 6 ký tự..."
+                  value={registerForm.password} onChange={(e) => setRegisterForm({ ...registerForm, password: e.target.value })} required minLength={6} />
+              </div>
+              <div className="form-group">
+                <label>Xác nhận mật khẩu</label>
+                <input type="password" className="form-control" placeholder="Nhập lại mật khẩu..."
+                  value={registerForm.confirmPassword} onChange={(e) => setRegisterForm({ ...registerForm, confirmPassword: e.target.value })} required />
+              </div>
+              <button type="submit" className="btn btn-primary login-modal-btn" disabled={registerLoading}>
+                {registerLoading ? 'Đang đăng ký...' : 'Đăng ký'}
+              </button>
+            </form>
+            <div className="login-modal-footer">
+              Đã có tài khoản? <a href="#" onClick={(e) => { e.preventDefault(); openLogin(); }}>Đăng nhập</a>
             </div>
           </div>
         </div>
@@ -214,7 +311,11 @@ export default function HomePage() {
           {courses.map(c => (
             <div key={c.id} className="home-course-card" onClick={() => handleCourseClick(c.id)}>
               <div className="course-thumb">
-                <div className="course-thumb-icon">📚</div>
+                {c.thumbnail_url ? (
+                  <img src={`http://localhost:5000${c.thumbnail_url}`} alt={c.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                ) : (
+                  <div className="course-thumb-icon">📚</div>
+                )}
               </div>
               <div className="course-body">
                 <h3>{c.title}</h3>
@@ -244,7 +345,7 @@ export default function HomePage() {
           <div className="hero-btns">
             {!isAuthenticated ? (
               <>
-                <Link to="/register" className="btn btn-primary btn-lg">Đăng ký miễn phí</Link>
+                <button className="btn btn-primary btn-lg" onClick={openRegister}>Đăng ký miễn phí</button>
                 <button className="btn btn-outline btn-lg" style={{ color: '#fff', borderColor: '#fff' }} onClick={requireLogin}>Đăng nhập</button>
               </>
             ) : (
@@ -266,7 +367,7 @@ export default function HomePage() {
             <a href="#courses">Khóa học</a>
             <a href="#features">Tính năng</a>
             <a href="#" onClick={(e) => { e.preventDefault(); requireLogin(); }}>Đăng nhập</a>
-            <Link to="/register">Đăng ký</Link>
+            <a href="#" onClick={(e) => { e.preventDefault(); openRegister(); }}>Đăng ký</a>
           </div>
           <div className="footer-col">
             <h4>Liên hệ</h4>

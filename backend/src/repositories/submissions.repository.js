@@ -21,8 +21,8 @@ const findByStudentAndAssignment = async (studentId, assignmentId) => {
 };
 const create = async (data) => {
   const [result] = await db.query(
-    `INSERT INTO submissions (assignment_id, student_id, content, file_url, status) VALUES (?, ?, ?, ?, ?)`,
-    [data.assignment_id, data.student_id, data.content || null, data.file_url || null, 'submitted']
+    `INSERT INTO submissions (assignment_id, student_id, content, status) VALUES (?, ?, ?, ?)`,
+    [data.assignment_id, data.student_id, data.content || null, 'submitted']
   );
   return result.insertId;
 };

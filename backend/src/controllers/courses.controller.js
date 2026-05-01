@@ -17,12 +17,31 @@ const getById = asyncHandler(async (req, res) => {
 
 const create = asyncHandler(async (req, res) => {
   const data = { ...req.body, lecturer_id: req.user.id };
+  // Handle file uploads
+  if (req.files) {
+    if (req.files.thumbnail && req.files.thumbnail[0]) {
+      data.thumbnail_url = `/uploads/courses/${req.files.thumbnail[0].filename}`;
+    }
+    if (req.files.intro_video && req.files.intro_video[0]) {
+      data.intro_video_url = `/uploads/courses/${req.files.intro_video[0].filename}`;
+    }
+  }
   const course = await coursesService.create(data);
   return ApiResponse.created(res, course, 'Tạo khóa học thành công');
 });
 
 const update = asyncHandler(async (req, res) => {
-  const course = await coursesService.update(req.params.id, req.body, req.user.id, req.user.role_name);
+  const data = { ...req.body };
+  // Handle file uploads
+  if (req.files) {
+    if (req.files.thumbnail && req.files.thumbnail[0]) {
+      data.thumbnail_url = `/uploads/courses/${req.files.thumbnail[0].filename}`;
+    }
+    if (req.files.intro_video && req.files.intro_video[0]) {
+      data.intro_video_url = `/uploads/courses/${req.files.intro_video[0].filename}`;
+    }
+  }
+  const course = await coursesService.update(req.params.id, data, req.user.id, req.user.role_name);
   return ApiResponse.success(res, course, 'Cập nhật khóa học thành công');
 });
 

@@ -67,4 +67,15 @@ const recalculate = async (studentId, courseId) => {
   return await findByStudentAndCourse(studentId, courseId);
 };
 
-module.exports = { findByStudentAndCourse, findByStudent, findByCourse, upsert, recalculate };
+const findAll = async () => {
+  const [rows] = await db.query(
+    `SELECT lp.*, c.title as course_title, u.full_name as student_name, u.email as student_email
+     FROM learning_progress lp
+     JOIN courses c ON lp.course_id = c.id
+     JOIN users u ON lp.student_id = u.id
+     ORDER BY lp.course_id ASC, lp.completion_rate DESC`
+  );
+  return rows;
+};
+
+module.exports = { findByStudentAndCourse, findByStudent, findByCourse, upsert, recalculate, findAll };

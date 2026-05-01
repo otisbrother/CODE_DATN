@@ -15,7 +15,9 @@ const upload = asyncHandler(async (req, res) => {
     lesson_id: req.params.lessonId,
     file_name: req.file.originalname,
     file_type: req.file.mimetype,
+    material_type: req.body.material_type || 'document',
     file_url: `/uploads/materials/${req.file.filename}`,
+    sort_order: req.body.sort_order || 1,
   });
   const data = await materialsRepo.findById(material);
   return ApiResponse.created(res, data, 'Tải tài liệu lên thành công');

@@ -7,6 +7,7 @@ const roleMiddleware = require('../middlewares/role.middleware');
 router.use(authMiddleware);
 router.post('/', roleMiddleware('student'), enrollController.enroll);
 router.get('/my', roleMiddleware('student'), enrollController.getMyEnrollments);
+router.get('/check/:courseId', roleMiddleware('student'), enrollController.checkEnrollment);
 router.get('/course/:courseId', roleMiddleware('lecturer', 'admin'), enrollController.getCourseEnrollments);
 
 module.exports = router;

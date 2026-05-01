@@ -4,13 +4,19 @@ const lessonsController = require('../controllers/lessons.controller');
 const materialsController = require('../controllers/materials.controller');
 const authMiddleware = require('../middlewares/auth.middleware');
 const roleMiddleware = require('../middlewares/role.middleware');
-const { uploadMaterial } = require('../middlewares/upload.middleware');
+const { uploadMaterial, uploadLessonVideo } = require('../middlewares/upload.middleware');
 
 // Lessons
 router.get('/course/:courseId', lessonsController.getByCourse);
 router.get('/:id', lessonsController.getById);
-router.post('/', authMiddleware, roleMiddleware('lecturer', 'admin'), lessonsController.create);
-router.put('/:id', authMiddleware, roleMiddleware('lecturer', 'admin'), lessonsController.update);
+router.post('/', authMiddleware, roleMiddleware('lecturer', 'admin'),
+  uploadLessonVideo.single('video'),
+  lessonsController.create
+);
+router.put('/:id', authMiddleware, roleMiddleware('lecturer', 'admin'),
+  uploadLessonVideo.single('video'),
+  lessonsController.update
+);
 router.delete('/:id', authMiddleware, roleMiddleware('lecturer', 'admin'), lessonsController.remove);
 
 // Materials

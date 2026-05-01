@@ -25,8 +25,8 @@ const findById = async (id) => {
 
 const create = async (data) => {
   const [result] = await db.query(
-    `INSERT INTO ai_data_sources (course_id, uploaded_by, file_name, file_type, file_url, content, status) VALUES (?, ?, ?, ?, ?, ?, ?)`,
-    [data.course_id, data.uploaded_by, data.file_name, data.file_type, data.file_url || '', data.content || null, 'pending']
+    `INSERT INTO ai_data_sources (course_id, uploaded_by, file_name, file_type, status) VALUES (?, ?, ?, ?, ?)`,
+    [data.course_id, data.uploaded_by, data.file_name, data.file_type, 'pending']
   );
   return result.insertId;
 };

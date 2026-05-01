@@ -1,37 +1,50 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { assignmentService } from '../../services/assignment.service';
+import { sectionService } from '../../services/section.service';
 import ConfirmModal from '../../components/ConfirmModal';
 
 export default function ManageAssignmentsPage() {
   const { courseId } = useParams();
   const [assignments, setAssignments] = useState([]);
+  const [sections, setSections] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editId, setEditId] = useState(null);
-  const [form, setForm] = useState({ title: '', description: '', due_date: '', max_score: 10 });
+  const [form, setForm] = useState({ title: '', description: '', due_date: '', max_score: 10, section_id: '', status: 'active' });
   const [msg, setMsg] = useState('');
   const [deleteId, setDeleteId] = useState(null);
 
   const load = async () => {
     try {
-      const res = await assignmentService.getByCourse(courseId);
-      setAssignments(res.data.data || []);
+      const [aRes, sRes] = await Promise.all([
+        assignmentService.getByCourse(courseId),
+        sectionService.getByCourse(courseId),
+      ]);
+      setAssignments(aRes.data.data || []);
+      setSections(sRes.data.data || []);
     } catch (e) { console.error(e); }
     setLoading(false);
   };
 
   useEffect(() => { load(); }, [courseId]);
 
-  const openCreate = () => {
+  const openCreate = (sectionId) => {
     setEditId(null);
-    setForm({ title: '', description: '', due_date: '', max_score: 10 });
+    setForm({ title: '', description: '', due_date: '', max_score: 10, section_id: sectionId || '', status: 'active' });
     setShowModal(true);
   };
 
   const openEdit = (a) => {
     setEditId(a.id);
-    setForm({ title: a.title, description: a.description || '', due_date: a.due_date ? a.due_date.substring(0, 16) : '', max_score: a.max_score });
+    setForm({
+      title: a.title,
+      description: a.description || '',
+      due_date: a.due_date ? a.due_date.substring(0, 16) : '',
+      max_score: a.max_score,
+      section_id: a.section_id,
+      status: a.status || 'active',
+    });
     setShowModal(true);
   };
 
@@ -66,12 +79,18 @@ export default function ManageAssignmentsPage() {
 
   if (loading) return <div className="loading">Đang tải...</div>;
 
+  // Group assignments by section
+  const getSectionName = (sectionId) => {
+    const s = sections.find(sec => sec.id === sectionId);
+    return s ? s.title : 'Không xác định';
+  };
+
   return (
     <div>
       <div className="page-header">
         <h1>Bài tập & Kiểm tra (Khóa #{courseId})</h1>
         <div style={{ display: 'flex', gap: 8 }}>
-          <button className="btn btn-primary" onClick={openCreate}>+ Thêm bài tập</button>
+          <button className="btn btn-primary" onClick={() => openCreate('')}>+ Thêm bài tập</button>
           <Link to="/lecturer/courses" className="btn btn-outline">← Quay lại</Link>
         </div>
       </div>
@@ -88,13 +107,22 @@ export default function ManageAssignmentsPage() {
             <form onSubmit={handleSubmit}>
               <div className="form-group"><label>Tiêu đề *</label>
                 <input className="form-control" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} required /></div>
+              <div className="form-group"><label>Chương *</label>
+                <select className="form-control" value={form.section_id} onChange={(e) => setForm({ ...form, section_id: Number(e.target.value) })} required>
+                  <option value="">-- Chọn chương --</option>
+                  {sections.map((s) => (<option key={s.id} value={s.id}>{s.title}</option>))}
+                </select></div>
               <div className="form-group"><label>Mô tả</label>
                 <textarea className="form-control" rows={3} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} /></div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 16 }}>
                 <div className="form-group"><label>Hạn nộp</label>
                   <input type="datetime-local" className="form-control" value={form.due_date} onChange={(e) => setForm({ ...form, due_date: e.target.value })} /></div>
                 <div className="form-group"><label>Điểm tối đa</label>
                   <input type="number" className="form-control" value={form.max_score} onChange={(e) => setForm({ ...form, max_score: Number(e.target.value) })} /></div>
+                <div className="form-group"><label>Trạng thái</label>
+                  <select className="form-control" value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })}>
+                    <option value="active">Hoạt động</option><option value="archived">Lưu trữ</option>
+                  </select></div>
               </div>
               <div className="modal-actions">
                 <button type="submit" className="btn btn-primary">{editId ? 'Cập nhật' : 'Thêm bài tập'}</button>
@@ -113,28 +141,43 @@ export default function ManageAssignmentsPage() {
         onCancel={() => setDeleteId(null)}
       />
 
-      <div className="table-container">
-        <table>
-          <thead><tr><th>ID</th><th>Tiêu đề</th><th>Điểm</th><th>Hạn nộp</th><th>Thao tác</th></tr></thead>
-          <tbody>
-            {assignments.map((a) => (
-              <tr key={a.id}>
-                <td>{a.id}</td>
-                <td><strong>{a.title}</strong></td>
-                <td>{a.max_score}</td>
-                <td>{a.due_date ? new Date(a.due_date).toLocaleDateString('vi-VN') : '-'}</td>
-                <td>
-                  <div style={{ display: 'flex', gap: 6 }}>
-                    <button className="btn btn-outline btn-sm" onClick={() => openEdit(a)}>Sửa</button>
-                    <Link to={`/lecturer/assignments/${a.id}/grade`} className="btn btn-primary btn-sm">Chấm điểm</Link>
-                    <button className="btn btn-danger btn-sm" onClick={() => setDeleteId(a.id)}>Xóa</button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+      {/* Hiển thị theo sections */}
+      {sections.map((section) => {
+        const sectionAssignments = assignments.filter(a => a.section_id === section.id);
+        if (sectionAssignments.length === 0) return null;
+        return (
+          <div key={section.id} className="card" style={{ marginBottom: 20 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+              <h3 style={{ margin: 0 }}>{section.title}</h3>
+              <button className="btn btn-primary btn-sm" onClick={() => openCreate(section.id)}>+ Bài tập</button>
+            </div>
+            <div className="table-container" style={{ margin: 0 }}>
+              <table>
+                <thead><tr><th>ID</th><th>Tiêu đề</th><th>Điểm</th><th>Hạn nộp</th><th>Trạng thái</th><th>Thao tác</th></tr></thead>
+                <tbody>
+                  {sectionAssignments.map((a) => (
+                    <tr key={a.id}>
+                      <td>{a.id}</td>
+                      <td><strong>{a.title}</strong></td>
+                      <td>{a.max_score}</td>
+                      <td>{a.due_date ? new Date(a.due_date).toLocaleDateString('vi-VN') : '-'}</td>
+                      <td><span className={`badge ${a.status === 'active' ? 'badge-success' : 'badge-warning'}`}>{a.status === 'active' ? 'Hoạt động' : 'Lưu trữ'}</span></td>
+                      <td>
+                        <div style={{ display: 'flex', gap: 6 }}>
+                          <button className="btn btn-outline btn-sm" onClick={() => openEdit(a)}>Sửa</button>
+                          <Link to={`/lecturer/assignments/${a.id}/grade`} className="btn btn-primary btn-sm">Chấm điểm</Link>
+                          <button className="btn btn-danger btn-sm" onClick={() => setDeleteId(a.id)}>Xóa</button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        );
+      })}
+
       {assignments.length === 0 && <p style={{ color: 'var(--text-secondary)', marginTop: 20 }}>Chưa có bài tập.</p>}
     </div>
   );

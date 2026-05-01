@@ -29,8 +29,8 @@ const findById = async (id) => {
 
 const create = async (data) => {
   const [result] = await db.query(
-    `INSERT INTO courses (title, description, price, lecturer_id, status) VALUES (?, ?, ?, ?, ?)`,
-    [data.title, data.description || null, data.price || 0, data.lecturer_id, data.status || 'draft']
+    `INSERT INTO courses (title, description, thumbnail_url, intro_video_url, short_description, price, lecturer_id, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+    [data.title, data.description || null, data.thumbnail_url || null, data.intro_video_url || null, data.short_description || null, data.price || 0, data.lecturer_id, data.status || 'draft']
   );
   return result.insertId;
 };
@@ -40,6 +40,9 @@ const update = async (id, data) => {
   const values = [];
   if (data.title) { fields.push('title = ?'); values.push(data.title); }
   if (data.description !== undefined) { fields.push('description = ?'); values.push(data.description); }
+  if (data.thumbnail_url !== undefined) { fields.push('thumbnail_url = ?'); values.push(data.thumbnail_url); }
+  if (data.intro_video_url !== undefined) { fields.push('intro_video_url = ?'); values.push(data.intro_video_url); }
+  if (data.short_description !== undefined) { fields.push('short_description = ?'); values.push(data.short_description); }
   if (data.price !== undefined) { fields.push('price = ?'); values.push(data.price); }
   if (data.status) { fields.push('status = ?'); values.push(data.status); }
   if (fields.length === 0) return;
@@ -55,11 +58,11 @@ const remove = async (id) => {
   await db.query(`DELETE FROM results WHERE submission_id IN (SELECT id FROM submissions WHERE assignment_id IN (SELECT id FROM assignments WHERE course_id = ?))`, [id]);
   await db.query(`DELETE FROM submissions WHERE assignment_id IN (SELECT id FROM assignments WHERE course_id = ?)`, [id]);
   await db.query(`DELETE FROM assignments WHERE course_id = ?`, [id]);
-  await db.query(`DELETE FROM learning_progress WHERE enrollment_id IN (SELECT id FROM enrollments WHERE course_id = ?)`, [id]);
+  await db.query(`DELETE FROM learning_progress WHERE course_id = ?`, [id]);
   await db.query(`DELETE FROM materials WHERE lesson_id IN (SELECT id FROM lessons WHERE course_id = ?)`, [id]);
   await db.query(`DELETE FROM lessons WHERE course_id = ?`, [id]);
+  await db.query(`DELETE FROM course_sections WHERE course_id = ?`, [id]);
   await db.query(`DELETE FROM enrollments WHERE course_id = ?`, [id]);
-  await db.query(`DELETE FROM payments WHERE course_id = ?`, [id]);
   await db.query(`DELETE FROM courses WHERE id = ?`, [id]);
 };
 

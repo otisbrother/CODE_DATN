@@ -32,4 +32,9 @@ const recalculate = asyncHandler(async (req, res) => {
   return ApiResponse.success(res, result);
 });
 
-module.exports = { getMyProgress, getCourseProgress, completeLesson, recalculate };
+const getAllProgress = asyncHandler(async (req, res) => {
+  const data = await progressRepo.findAll();
+  return ApiResponse.success(res, data);
+});
+
+module.exports = { getMyProgress, getCourseProgress, completeLesson, recalculate, getAllProgress };

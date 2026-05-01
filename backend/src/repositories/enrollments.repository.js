@@ -9,7 +9,7 @@ const findByUserAndCourse = async (userId, courseId) => {
 
 const findByUser = async (userId) => {
   const [rows] = await db.query(
-    `SELECT e.*, c.title as course_title, c.description, c.price, u.full_name as lecturer_name
+    `SELECT e.*, c.title as course_title, c.description, c.price, c.thumbnail_url, u.full_name as lecturer_name
      FROM enrollments e
      JOIN courses c ON e.course_id = c.id
      JOIN users u ON c.lecturer_id = u.id

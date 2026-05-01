@@ -18,6 +18,17 @@ app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 // API Routes
 app.use('/api', routes);
 
+// Root check
+app.get('/', (req, res) => {
+  res.json({
+    success: true,
+    message: 'E-Learning API is running',
+    health: '/health',
+    api: '/api',
+    webhook: '/api/payments/bank-webhook',
+  });
+});
+
 // Health check
 app.get('/health', (req, res) => {
   res.json({ status: 'OK', timestamp: new Date().toISOString() });

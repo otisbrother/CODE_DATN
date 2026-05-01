@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
-import { FiHome, FiBook, FiFileText, FiBarChart2, FiMessageCircle, FiLogOut, FiMenu, FiX, FiUsers, FiDatabase, FiCheckSquare } from 'react-icons/fi';
+import { FiHome, FiBook, FiFileText, FiBarChart2, FiMessageCircle, FiLogOut, FiMenu, FiX, FiUsers, FiDatabase, FiCheckSquare, FiDollarSign } from 'react-icons/fi';
 import useAuthStore from '../store/auth.store';
 import './DashboardLayout.css';
 
@@ -20,6 +20,9 @@ const menuConfig = {
   admin: [
     { path: '/admin', icon: <FiHome />, label: 'Dashboard' },
     { path: '/admin/users', icon: <FiUsers />, label: 'Quản lý người dùng' },
+    { path: '/admin/courses', icon: <FiBook />, label: 'Giám sát khóa học' },
+    { path: '/admin/progress', icon: <FiBarChart2 />, label: 'Tiến độ học tập' },
+    { path: '/admin/payments', icon: <FiDollarSign />, label: 'Lịch sử thanh toán' },
     { path: '/admin/ai-approve', icon: <FiCheckSquare />, label: 'Duyệt dữ liệu AI' },
   ],
 };

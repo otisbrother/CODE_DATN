@@ -4,10 +4,6 @@ import useAuthStore from './store/auth.store';
 // Layouts
 import DashboardLayout from './layouts/DashboardLayout';
 
-// Auth
-import LoginPage from './pages/auth/LoginPage';
-import RegisterPage from './pages/auth/RegisterPage';
-
 // Home
 import HomePage from './pages/home/HomePage';
 
@@ -29,22 +25,20 @@ import ManageLessonsPage from './pages/lecturer/ManageLessonsPage';
 import ManageAssignmentsPage from './pages/lecturer/ManageAssignmentsPage';
 import GradeSubmissionsPage from './pages/lecturer/GradeSubmissionsPage';
 import ManageAIDataPage from './pages/lecturer/ManageAIDataPage';
+import StudentProgressPage from './pages/lecturer/StudentProgressPage';
 
 // Admin
 import AdminDashboard from './pages/admin/AdminDashboard';
 import ManageUsersPage from './pages/admin/ManageUsersPage';
 import ManageAIApprovePage from './pages/admin/ManageAIApprovePage';
+import AdminCoursesPage from './pages/admin/AdminCoursesPage';
+import AdminProgressPage from './pages/admin/AdminProgressPage';
+import PaymentHistoryPage from './pages/admin/PaymentHistoryPage';
 
 function ProtectedRoute({ children, allowedRoles }) {
   const { isAuthenticated, user } = useAuthStore();
   if (!isAuthenticated) return <Navigate to="/" replace />;
   if (allowedRoles && !allowedRoles.includes(user?.role)) return <Navigate to="/" replace />;
-  return children;
-}
-
-function AuthRedirect({ children }) {
-  const { isAuthenticated, user } = useAuthStore();
-  if (isAuthenticated && user) return <Navigate to={`/${user.role}`} replace />;
   return children;
 }
 
@@ -54,8 +48,8 @@ export default function App() {
       <Routes>
         {/* Public routes */}
         <Route path="/" element={<HomePage />} />
-        <Route path="/login" element={<AuthRedirect><LoginPage /></AuthRedirect>} />
-        <Route path="/register" element={<AuthRedirect><RegisterPage /></AuthRedirect>} />
+        <Route path="/login" element={<Navigate to="/" replace />} />
+        <Route path="/register" element={<Navigate to="/" replace />} />
 
         {/* Student routes */}
         <Route path="/student" element={
@@ -85,6 +79,7 @@ export default function App() {
           <Route path="courses/:courseId/edit" element={<CourseFormPage />} />
           <Route path="courses/:courseId/lessons" element={<ManageLessonsPage />} />
           <Route path="courses/:courseId/assignments" element={<ManageAssignmentsPage />} />
+          <Route path="courses/:courseId/progress" element={<StudentProgressPage />} />
           <Route path="assignments/:assignmentId/grade" element={<GradeSubmissionsPage />} />
           <Route path="ai-data" element={<ManageAIDataPage />} />
         </Route>
@@ -97,6 +92,9 @@ export default function App() {
         }>
           <Route index element={<AdminDashboard />} />
           <Route path="users" element={<ManageUsersPage />} />
+          <Route path="courses" element={<AdminCoursesPage />} />
+          <Route path="progress" element={<AdminProgressPage />} />
+          <Route path="payments" element={<PaymentHistoryPage />} />
           <Route path="ai-approve" element={<ManageAIApprovePage />} />
         </Route>
 

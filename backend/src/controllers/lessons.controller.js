@@ -15,12 +15,22 @@ const getById = asyncHandler(async (req, res) => {
 });
 
 const create = asyncHandler(async (req, res) => {
-  const lesson = await lessonsService.create(req.body, req.user.id, req.user.role_name);
+  const data = { ...req.body };
+  // Handle video file upload
+  if (req.file) {
+    data.video_url = `/uploads/videos/${req.file.filename}`;
+  }
+  const lesson = await lessonsService.create(data, req.user.id, req.user.role_name);
   return ApiResponse.created(res, lesson, 'Tạo bài học thành công');
 });
 
 const update = asyncHandler(async (req, res) => {
-  const lesson = await lessonsService.update(req.params.id, req.body, req.user.id, req.user.role_name);
+  const data = { ...req.body };
+  // Handle video file upload
+  if (req.file) {
+    data.video_url = `/uploads/videos/${req.file.filename}`;
+  }
+  const lesson = await lessonsService.update(req.params.id, data, req.user.id, req.user.role_name);
   return ApiResponse.success(res, lesson, 'Cập nhật bài học thành công');
 });
 
