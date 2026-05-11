@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
-import { FiHome, FiBook, FiFileText, FiBarChart2, FiMessageCircle, FiLogOut, FiMenu, FiX, FiUsers, FiDatabase, FiCheckSquare, FiDollarSign } from 'react-icons/fi';
+import { FiHome, FiBook, FiFileText, FiBarChart2, FiMessageCircle, FiLogOut, FiMenu, FiArrowLeft, FiUsers, FiDatabase, FiCheckSquare, FiDollarSign } from 'react-icons/fi';
 import useAuthStore from '../store/auth.store';
 import './DashboardLayout.css';
 
@@ -45,7 +45,7 @@ export default function DashboardLayout() {
         <div className="sidebar-header">
           <h2 className="logo">🎓 E-Learning</h2>
           <button className="sidebar-toggle" onClick={() => setSidebarOpen(!sidebarOpen)}>
-            {sidebarOpen ? <FiX /> : <FiMenu />}
+            {sidebarOpen ? <FiArrowLeft /> : <FiMenu />}
           </button>
         </div>
         <nav className="sidebar-nav">
