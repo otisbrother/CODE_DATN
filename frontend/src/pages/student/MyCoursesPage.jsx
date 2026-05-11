@@ -4,7 +4,7 @@ import { enrollmentService } from '../../services/enrollment.service';
 import { courseService } from '../../services/course.service';
 import useAuthStore from '../../store/auth.store';
 
-const API_URL = 'http://localhost:5000';
+const API_URL = '';
 
 export default function MyCoursesPage() {
   const { user } = useAuthStore();

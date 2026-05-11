@@ -3,7 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import { lessonService } from '../../services/lesson.service';
 import { progressService } from '../../services/progress.service';
 
-const API_URL = 'http://localhost:5000';
+const API_URL = '';
 
 export default function LessonLearningPage() {
   const { lessonId } = useParams();

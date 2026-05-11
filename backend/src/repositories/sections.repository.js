@@ -33,7 +33,35 @@ const update = async (id, data) => {
 };
 
 const remove = async (id) => {
-  await db.query(`DELETE FROM course_sections WHERE id = ?`, [id]);
+  const conn = await db.getConnection();
+
+  try {
+    await conn.beginTransaction();
+
+    const [[{ total }]] = await conn.query(
+      `SELECT COUNT(*) as total
+       FROM submissions s
+       JOIN assignments a ON a.id = s.assignment_id
+       WHERE a.section_id = ?`,
+      [id]
+    );
+
+    if (total > 0) {
+      const error = new Error('Không thể xóa chương vì có bài tập đã có bài nộp');
+      error.statusCode = 409;
+      throw error;
+    }
+
+    await conn.query(`DELETE FROM assignments WHERE section_id = ?`, [id]);
+    await conn.query(`DELETE FROM course_sections WHERE id = ?`, [id]);
+
+    await conn.commit();
+  } catch (error) {
+    await conn.rollback();
+    throw error;
+  } finally {
+    conn.release();
+  }
 };
 
 const countByCourse = async (courseId) => {

@@ -1,8 +1,9 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { courseService } from '../../services/course.service';
 import { authService } from '../../services/auth.service';
 import useAuthStore from '../../store/auth.store';
+import ChatbotWidget from '../../components/ChatbotWidget';
 import './HomePage.css';
 
 const slides = [
@@ -29,14 +30,23 @@ export default function HomePage() {
   const [registerForm, setRegisterForm] = useState({ full_name: '', email: '', password: '', confirmPassword: '' });
   const [registerError, setRegisterError] = useState('');
   const [registerLoading, setRegisterLoading] = useState(false);
+  const [registerSuccess, setRegisterSuccess] = useState('');
   const [pendingCourseId, setPendingCourseId] = useState(null);
   const { isAuthenticated, user, setAuth } = useAuthStore();
   const navigate = useNavigate();
   const intervalRef = useRef(null);
+  const loginGoogleRef = useRef(null);
+  const registerGoogleRef = useRef(null);
+  const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
   useEffect(() => {
     courseService.getAll({ status: 'published', limit: 20 })
-      .then(res => setCourses(res.data.data || []))
+      .then(res => {
+        const visibleCourses = (res.data.data || []).filter(
+          course => !course.title?.toLowerCase().includes('reactjs')
+        );
+        setCourses(visibleCourses);
+      })
       .catch(console.error);
   }, []);
 
@@ -59,6 +69,7 @@ export default function HomePage() {
       setShowLogin(true);
       setLoginError('');
       setLoginForm({ email: '', password: '' });
+      setRegisterSuccess('');
     }
   };
 
@@ -71,21 +82,49 @@ export default function HomePage() {
     }
   };
 
+  const completeAuth = useCallback((u, token) => {
+    setAuth(u, token);
+    setShowLogin(false);
+    setShowRegister(false);
+    if (pendingCourseId) {
+      navigate(`/student/course/${pendingCourseId}`);
+      setPendingCourseId(null);
+    } else {
+      navigate(`/${u.role}`);
+    }
+  }, [navigate, pendingCourseId, setAuth]);
+
+  const handleGoogleCredential = useCallback(async (credential) => {
+    setLoginError('');
+    setRegisterError('');
+    setRegisterSuccess('');
+    setLoginLoading(true);
+    setRegisterLoading(true);
+    try {
+      const res = await authService.googleLogin({ credential });
+      const { user: u, token } = res.data.data;
+      completeAuth(u, token);
+    } catch (err) {
+      const message = err.response?.data?.message || 'Đăng nhập Gmail thất bại';
+      if (showRegister) {
+        setRegisterError(message);
+      } else {
+        setLoginError(message);
+      }
+    }
+    setLoginLoading(false);
+    setRegisterLoading(false);
+  }, [completeAuth, showRegister]);
+
   const handleLogin = async (e) => {
     e.preventDefault();
     setLoginLoading(true);
     setLoginError('');
+    setRegisterSuccess('');
     try {
       const res = await authService.login(loginForm);
       const { user: u, token } = res.data.data;
-      setAuth(u, token);
-      setShowLogin(false);
-      if (pendingCourseId) {
-        navigate(`/student/course/${pendingCourseId}`);
-        setPendingCourseId(null);
-      } else {
-        navigate(`/${u.role}`);
-      }
+      completeAuth(u, token);
     } catch (err) {
       setLoginError(err.response?.data?.message || 'Email hoặc mật khẩu không đúng');
     }
@@ -104,6 +143,7 @@ export default function HomePage() {
     setShowLogin(true);
     setLoginError('');
     setLoginForm({ email: '', password: '' });
+    setRegisterSuccess('');
   };
 
   const handleRegister = async (e) => {
@@ -115,25 +155,71 @@ export default function HomePage() {
     setRegisterLoading(true);
     setRegisterError('');
     try {
-      const res = await authService.register({
+      await authService.register({
         full_name: registerForm.full_name,
         email: registerForm.email,
         password: registerForm.password,
       });
-      const { user: u, token } = res.data.data;
-      setAuth(u, token);
+      // Đăng ký thành công → chuyển sang modal đăng nhập với thông báo
       setShowRegister(false);
-      if (pendingCourseId) {
-        navigate(`/student/course/${pendingCourseId}`);
-        setPendingCourseId(null);
-      } else {
-        navigate(`/${u.role}`);
-      }
+      setShowLogin(true);
+      setLoginForm({ email: registerForm.email, password: '' });
+      setLoginError('');
+      setRegisterSuccess('Đăng ký thành công! Vui lòng đăng nhập.');
     } catch (err) {
       setRegisterError(err.response?.data?.message || 'Đăng ký thất bại');
     }
     setRegisterLoading(false);
   };
+
+  useEffect(() => {
+    if ((!showLogin && !showRegister) || !googleClientId) return undefined;
+
+    const renderGoogleButtons = () => {
+      if (!window.google?.accounts?.id) return;
+
+      window.google.accounts.id.initialize({
+        client_id: googleClientId,
+        callback: (response) => handleGoogleCredential(response.credential),
+      });
+
+      const targets = [
+        { ref: loginGoogleRef, text: 'signin_with' },
+        { ref: registerGoogleRef, text: 'signup_with' },
+      ];
+
+      targets.forEach(({ ref, text }) => {
+        if (ref.current && ref.current.childElementCount === 0) {
+          window.google.accounts.id.renderButton(ref.current, {
+            theme: 'outline',
+            size: 'large',
+            type: 'standard',
+            shape: 'rectangular',
+            text,
+            width: 356,
+          });
+        }
+      });
+    };
+
+    const scriptId = 'google-identity-services';
+    const existingScript = document.getElementById(scriptId);
+
+    if (existingScript) {
+      renderGoogleButtons();
+      return undefined;
+    }
+
+    const script = document.createElement('script');
+    script.id = scriptId;
+    script.src = 'https://accounts.google.com/gsi/client';
+    script.async = true;
+    script.defer = true;
+    script.onload = renderGoogleButtons;
+    document.body.appendChild(script);
+
+    return undefined;
+  }, [showLogin, showRegister, googleClientId, handleGoogleCredential]);
 
   return (
     <div className="home-page">
@@ -169,6 +255,7 @@ export default function HomePage() {
               <h2>Đăng nhập E-Learning</h2>
               <p>Vui lòng đăng nhập để tiếp tục</p>
             </div>
+            {registerSuccess && <div className="login-modal-success">{registerSuccess}</div>}
             {loginError && <div className="login-modal-error">{loginError}</div>}
             <form onSubmit={handleLogin}>
               <div className="form-group">
@@ -198,6 +285,12 @@ export default function HomePage() {
                 {loginLoading ? 'Đang đăng nhập...' : 'Đăng nhập'}
               </button>
             </form>
+            <div className="login-divider"><span>hoặc</span></div>
+            {googleClientId ? (
+              <div className="google-login-button" ref={loginGoogleRef} />
+            ) : (
+              <button type="button" className="google-login-fallback" disabled>Chưa cấu hình Gmail login</button>
+            )}
             <div className="login-modal-footer">
               Chưa có tài khoản? <a href="#" onClick={(e) => { e.preventDefault(); openRegister(); }}>Đăng ký ngay</a>
             </div>
@@ -241,6 +334,12 @@ export default function HomePage() {
                 {registerLoading ? 'Đang đăng ký...' : 'Đăng ký'}
               </button>
             </form>
+            <div className="login-divider"><span>hoặc</span></div>
+            {googleClientId ? (
+              <div className="google-login-button" ref={registerGoogleRef} />
+            ) : (
+              <button type="button" className="google-login-fallback" disabled>Chưa cấu hình Gmail login</button>
+            )}
             <div className="login-modal-footer">
               Đã có tài khoản? <a href="#" onClick={(e) => { e.preventDefault(); openLogin(); }}>Đăng nhập</a>
             </div>
@@ -312,7 +411,7 @@ export default function HomePage() {
             <div key={c.id} className="home-course-card" onClick={() => handleCourseClick(c.id)}>
               <div className="course-thumb">
                 {c.thumbnail_url ? (
-                  <img src={`http://localhost:5000${c.thumbnail_url}`} alt={c.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  <img src={c.thumbnail_url} alt={c.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                 ) : (
                   <div className="course-thumb-icon">📚</div>
                 )}
@@ -359,7 +458,7 @@ export default function HomePage() {
       <footer className="home-footer">
         <div className="footer-inner">
           <div className="footer-col">
-            <h4>🎓 E-Learning AI</h4>
+            <h4>🎓 E-Learning </h4>
             <p>Hệ thống học trực tuyến tích hợp trí tuệ nhân tạo. Đồ án tốt nghiệp Đại học Thủy Lợi.</p>
           </div>
           <div className="footer-col">
@@ -380,6 +479,9 @@ export default function HomePage() {
           <p>© 2026 E-Learning AI — Đồ án tốt nghiệp. All rights reserved.</p>
         </div>
       </footer>
+
+      {/* AI CHATBOT TƯ VẤN KHÓA HỌC */}
+      <ChatbotWidget />
     </div>
   );
 }

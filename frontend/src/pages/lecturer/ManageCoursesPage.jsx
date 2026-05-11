@@ -3,7 +3,7 @@ import { courseService } from '../../services/course.service';
 import useAuthStore from '../../store/auth.store';
 import { Link } from 'react-router-dom';
 
-const API_URL = 'http://localhost:5000';
+const API_URL = '';
 
 export default function ManageCoursesPage() {
   const { user } = useAuthStore();

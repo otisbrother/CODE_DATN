@@ -8,7 +8,7 @@ import { enrollmentService, paymentService } from '../../services/enrollment.ser
 import { progressService } from '../../services/progress.service';
 import './CourseDetailPage.css';
 
-const API_URL = 'http://localhost:5000';
+const API_URL = '';
 
 // VietQR fallback config. Backend also returns this info in paymentInfo.bankTransfer.
 const BANK_BIN = '970422'; // MB
@@ -35,6 +35,7 @@ export default function CourseDetailPage() {
   const [paymentInfo, setPaymentInfo] = useState(null);
   const [enrollLoading, setEnrollLoading] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [showLockedNotice, setShowLockedNotice] = useState(false);
   const [msg, setMsg] = useState({ text: '', type: '' });
 
   useEffect(() => {
@@ -166,6 +167,11 @@ export default function CourseDetailPage() {
     return false;
   };
 
+  const handleLockedContentClick = (e) => {
+    e.preventDefault();
+    setShowLockedNotice(true);
+  };
+
   const totalDuration = lessons.reduce((s, l) => s + (l.duration_seconds || 0), 0);
   const totalHours = (totalDuration / 3600).toFixed(1);
   const videoCount = lessons.filter(l => l.video_url).length;
@@ -277,6 +283,34 @@ export default function CourseDetailPage() {
         </div>
       )}
 
+      {/* ========== LOCKED CONTENT NOTICE ========== */}
+      {showLockedNotice && (
+        <div className="modal-overlay" onClick={() => setShowLockedNotice(false)}>
+          <div className="locked-notice-modal" onClick={(e) => e.stopPropagation()}>
+            <button className="modal-close" onClick={() => setShowLockedNotice(false)}>×</button>
+            <div className="locked-notice-icon">🔒</div>
+            <h2>Nội dung đang bị khóa</h2>
+            <p>Hãy thanh toán khóa học để học tiếp nhé.</p>
+            <div className="locked-notice-actions">
+              <button
+                type="button"
+                className="btn btn-primary"
+                onClick={() => {
+                  setShowLockedNotice(false);
+                  handleEnroll();
+                }}
+                disabled={enrollLoading}
+              >
+                {enrollLoading ? 'Đang xử lý...' : 'Thanh toán ngay'}
+              </button>
+              <button type="button" className="btn btn-outline" onClick={() => setShowLockedNotice(false)}>
+                Để sau
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* ========== MAIN LAYOUT ========== */}
       <div className="course-detail-layout">
         {/* LEFT COLUMN */}
@@ -367,7 +401,7 @@ export default function CourseDetailPage() {
                             to={accessible ? `/student/lesson/${l.id}` : '#'}
                             className="cd-lesson-item"
                             style={{ textDecoration: 'none' }}
-                            onClick={e => { if (!accessible) e.preventDefault(); }}
+                            onClick={e => { if (!accessible) handleLockedContentClick(e); }}
                           >
                             <div className="lesson-left">
                               <span className="lesson-icon video">{l.video_url ? '🎥' : '📄'}</span>
@@ -390,7 +424,7 @@ export default function CourseDetailPage() {
                             to={accessible ? `/student/assignment/${a.id}` : '#'}
                             className="cd-lesson-item"
                             style={{ textDecoration: 'none' }}
-                            onClick={e => { if (!accessible) e.preventDefault(); }}
+                            onClick={e => { if (!accessible) handleLockedContentClick(e); }}
                           >
                             <div className="lesson-left">
                               <span className="lesson-icon assignment">📝</span>

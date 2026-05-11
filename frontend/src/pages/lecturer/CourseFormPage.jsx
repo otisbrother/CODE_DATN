@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { courseService } from '../../services/course.service';
 
-const API_URL = 'http://localhost:5000';
+const API_URL = '';
 
 export default function CourseFormPage() {
   const { courseId } = useParams();

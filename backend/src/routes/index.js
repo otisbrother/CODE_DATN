@@ -12,6 +12,7 @@ const aiRoutes = require('./ai.routes');
 const sectionsRoutes = require('./sections.routes');
 const adminStatsRoutes = require('./admin.stats.routes');
 const paymentsRoutes = require('./payments.routes');
+const chatbotRoutes = require('./chatbot.routes');
 
 router.use('/auth', authRoutes);
 router.use('/users', usersRoutes);
@@ -24,5 +25,6 @@ router.use('/ai', aiRoutes);
 router.use('/sections', sectionsRoutes);
 router.use('/admin', adminStatsRoutes);
 router.use('/payments', paymentsRoutes);
+router.use('/chatbot', chatbotRoutes);
 
 module.exports = router;

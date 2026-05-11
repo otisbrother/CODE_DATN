@@ -4,7 +4,7 @@ import { lessonService } from '../../services/lesson.service';
 import { sectionService } from '../../services/section.service';
 import ConfirmModal from '../../components/ConfirmModal';
 
-const API_URL = 'http://localhost:5000';
+const API_URL = '';
 
 export default function ManageLessonsPage() {
   const { courseId } = useParams();
@@ -20,6 +20,8 @@ export default function ManageLessonsPage() {
   const [videoPreview, setVideoPreview] = useState('');
   const [sectionForm, setSectionForm] = useState({ title: '', description: '', section_order: 1, is_preview: 0 });
   const [msg, setMsg] = useState('');
+  const [modalError, setModalError] = useState('');
+  const [submittingLesson, setSubmittingLesson] = useState(false);
   const [deleteId, setDeleteId] = useState(null);
   const [deleteSectionId, setDeleteSectionId] = useState(null);
 
@@ -86,6 +88,8 @@ export default function ManageLessonsPage() {
     setForm({ title: '', content: '', section_id: sectionId, duration_seconds: '', is_preview: 0, status: 'active', lesson_order: sectionLessons.length + 1 });
     setVideoFile(null);
     setVideoPreview('');
+    setModalError('');
+    setSubmittingLesson(false);
     setShowModal(true);
   };
 
@@ -102,6 +106,8 @@ export default function ManageLessonsPage() {
     });
     setVideoFile(null);
     setVideoPreview(l.video_url ? `${API_URL}${l.video_url}` : '');
+    setModalError('');
+    setSubmittingLesson(false);
     setShowModal(true);
   };
 
@@ -115,6 +121,8 @@ export default function ManageLessonsPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setSubmittingLesson(true);
+    setModalError('');
     try {
       const formData = new FormData();
       formData.append('title', form.title);
@@ -138,8 +146,9 @@ export default function ManageLessonsPage() {
       load();
       setTimeout(() => setMsg(''), 3000);
     } catch (err) {
-      setMsg(err.response?.data?.message || 'Lỗi');
+      setModalError(err.response?.data?.message || 'Lỗi lưu bài học');
     }
+    setSubmittingLesson(false);
   };
 
   const handleDelete = async () => {
@@ -205,6 +214,7 @@ export default function ManageLessonsPage() {
               <button className="modal-close" onClick={() => setShowModal(false)}>×</button>
             </div>
             <form onSubmit={handleSubmit}>
+              {modalError && <div className="alert alert-error">{modalError}</div>}
               <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 16 }}>
                 <div className="form-group"><label>Tiêu đề *</label>
                   <input className="form-control" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} required /></div>
@@ -238,7 +248,9 @@ export default function ManageLessonsPage() {
                   </select></div>
               </div>
               <div className="modal-actions">
-                <button type="submit" className="btn btn-primary">{editId ? 'Cập nhật' : 'Thêm bài học'}</button>
+                <button type="submit" className="btn btn-primary" disabled={submittingLesson}>
+                  {submittingLesson ? 'Đang lưu...' : editId ? 'Cập nhật' : 'Thêm bài học'}
+                </button>
                 <button type="button" className="btn btn-outline" onClick={() => setShowModal(false)}>Hủy</button>
               </div>
             </form>

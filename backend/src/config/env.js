@@ -9,7 +9,11 @@ module.exports = {
   DB_NAME: process.env.DB_NAME || 'elearning_ai',
   JWT_SECRET: process.env.JWT_SECRET || 'default_secret',
   JWT_EXPIRES_IN: process.env.JWT_EXPIRES_IN || '7d',
+  GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID || '',
   OPENAI_API_KEY: process.env.OPENAI_API_KEY || '',
+  SMTP_HOST: process.env.SMTP_HOST || 'smtp.gmail.com',
+  SMTP_PORT: process.env.SMTP_PORT || 587,
+  SMTP_USER: process.env.SMTP_USER || '',
   SMTP_HOST: process.env.SMTP_HOST || 'smtp.gmail.com',
   SMTP_PORT: process.env.SMTP_PORT || 587,
   SMTP_USER: process.env.SMTP_USER || '',
@@ -20,4 +24,5 @@ module.exports = {
   ADMIN_BANK_ACCOUNT_NO: process.env.ADMIN_BANK_ACCOUNT_NO || '0395256163',
   ADMIN_BANK_ACCOUNT_NAME: process.env.ADMIN_BANK_ACCOUNT_NAME || 'NGUYEN HUY TOA',
   BANK_WEBHOOK_SECRET: process.env.BANK_WEBHOOK_SECRET || '',
+  N8N_CHATBOT_WEBHOOK_URL: process.env.N8N_CHATBOT_WEBHOOK_URL || '',
 };
