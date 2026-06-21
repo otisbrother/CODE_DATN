@@ -4,3 +4,6 @@ uploads/
 dist/
 .DS_Store
 *.log
+ngrok.exe
+Microsoft/
+.claude/
