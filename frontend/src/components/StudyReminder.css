@@ -1,0 +1,54 @@
+.study-reminder-toast {
+  position: fixed;
+  top: 24px;
+  right: 24px;
+  z-index: 2000;
+  width: 320px;
+  max-width: calc(100vw - 32px);
+  display: flex;
+  gap: 12px;
+  padding: 16px;
+  background: #ffffff;
+  border: 1px solid #c7d2fe;
+  border-left: 5px solid #6d28d9;
+  border-radius: 14px;
+  box-shadow: 0 16px 40px rgba(76, 29, 149, 0.22);
+  animation: study-reminder-in 0.25s ease;
+}
+
+@keyframes study-reminder-in {
+  from { transform: translateY(-12px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.study-reminder-emoji {
+  font-size: 26px;
+  line-height: 1;
+}
+
+.study-reminder-body strong {
+  display: block;
+  color: #4c1d95;
+  font-size: 15px;
+  margin-bottom: 4px;
+}
+
+.study-reminder-body p {
+  margin: 0 0 10px;
+  color: #374151;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.study-reminder-close {
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  background: none;
+  border: none;
+  font-size: 20px;
+  line-height: 1;
+  color: #9ca3af;
+  cursor: pointer;
+}
+.study-reminder-close:hover { color: #4b5563; }
