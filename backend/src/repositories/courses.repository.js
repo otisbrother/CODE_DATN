@@ -29,8 +29,8 @@ const findById = async (id) => {
 
 const create = async (data) => {
   const [result] = await db.query(
-    `INSERT INTO courses (title, description, thumbnail_url, intro_video_url, short_description, price, lecturer_id, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-    [data.title, data.description || null, data.thumbnail_url || null, data.intro_video_url || null, data.short_description || null, data.price || 0, data.lecturer_id, data.status || 'draft']
+    `INSERT INTO courses (title, description, thumbnail_url, intro_video_url, short_description, price, lecturer_id, status, duration_days) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [data.title, data.description || null, data.thumbnail_url || null, data.intro_video_url || null, data.short_description || null, data.price || 0, data.lecturer_id, data.status || 'draft', data.duration_days || null]
   );
   return result.insertId;
 };
@@ -45,6 +45,7 @@ const update = async (id, data) => {
   if (data.short_description !== undefined) { fields.push('short_description = ?'); values.push(data.short_description); }
   if (data.price !== undefined) { fields.push('price = ?'); values.push(data.price); }
   if (data.status) { fields.push('status = ?'); values.push(data.status); }
+  if (data.duration_days !== undefined) { fields.push('duration_days = ?'); values.push(data.duration_days || null); }
   if (fields.length === 0) return;
   values.push(id);
   await db.query(`UPDATE courses SET ${fields.join(', ')} WHERE id = ?`, values);
@@ -59,6 +60,8 @@ const remove = async (id) => {
   await db.query(`DELETE FROM submissions WHERE assignment_id IN (SELECT id FROM assignments WHERE course_id = ?)`, [id]);
   await db.query(`DELETE FROM assignments WHERE course_id = ?`, [id]);
   await db.query(`DELETE FROM learning_progress WHERE course_id = ?`, [id]);
+  await db.query(`DELETE FROM voucher_usages WHERE course_id = ?`, [id]);
+  await db.query(`DELETE FROM voucher_courses WHERE course_id = ?`, [id]);
   await db.query(`DELETE FROM materials WHERE lesson_id IN (SELECT id FROM lessons WHERE course_id = ?)`, [id]);
   await db.query(`DELETE FROM lessons WHERE course_id = ?`, [id]);
   await db.query(`DELETE FROM course_sections WHERE course_id = ?`, [id]);

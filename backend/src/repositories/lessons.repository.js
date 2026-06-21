@@ -2,7 +2,10 @@ const db = require('../config/db');
 
 const findByCourse = async (courseId) => {
   const [rows] = await db.query(
-    `SELECT * FROM lessons WHERE course_id = ? ORDER BY section_id ASC, lesson_order ASC`, [courseId]
+    `SELECT l.*, COALESCE(s.is_preview, 0) AS section_is_preview
+     FROM lessons l
+     LEFT JOIN course_sections s ON l.section_id = s.id
+     WHERE l.course_id = ? ORDER BY l.section_id ASC, l.lesson_order ASC`, [courseId]
   );
   return rows;
 };
@@ -15,7 +18,13 @@ const findBySection = async (sectionId) => {
 };
 
 const findById = async (id) => {
-  const [rows] = await db.query(`SELECT * FROM lessons WHERE id = ?`, [id]);
+  const [rows] = await db.query(
+    `SELECT l.*, COALESCE(s.is_preview, 0) AS section_is_preview
+     FROM lessons l
+     LEFT JOIN course_sections s ON l.section_id = s.id
+     WHERE l.id = ?`,
+    [id]
+  );
   return rows[0] || null;
 };
 

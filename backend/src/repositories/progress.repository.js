@@ -23,6 +23,21 @@ const findByCourse = async (courseId) => {
   return rows;
 };
 
+// Luu % video da xem cho 1 bai (chi tang, lay max) - "xem den dau luu den do"
+const saveLessonWatch = async (studentId, lessonId, percent) => {
+  const p = Math.max(0, Math.min(Number(percent) || 0, 100));
+  await db.query(
+    `INSERT INTO lesson_completions (student_id, lesson_id, watched_percent) VALUES (?, ?, ?)
+     ON DUPLICATE KEY UPDATE watched_percent = GREATEST(watched_percent, VALUES(watched_percent))`,
+    [studentId, lessonId, p]
+  );
+};
+
+// Danh dau hoan thanh hoan toan 1 bai (watched_percent = 100)
+const markLessonComplete = async (studentId, lessonId) => {
+  await saveLessonWatch(studentId, lessonId, 100);
+};
+
 const upsert = async (studentId, courseId, data) => {
   const existing = await findByStudentAndCourse(studentId, courseId);
   if (existing) {
@@ -39,23 +54,52 @@ const upsert = async (studentId, courseId, data) => {
 };
 
 const recalculate = async (studentId, courseId) => {
-  // Count total / completed lessons
+  // ===== Thành phần 1: VIDEO = tổng (% xem mỗi bài / 100), mỗi bài tối đa 1 =====
   const [[{ totalLessons }]] = await db.query(`SELECT COUNT(*) as totalLessons FROM lessons WHERE course_id = ?`, [courseId]);
-  // For simplicity, completed_lessons tracks manually or via API call
-  // Count total / completed assignments
-  const [[{ totalAssignments }]] = await db.query(`SELECT COUNT(*) as totalAssignments FROM assignments WHERE course_id = ?`, [courseId]);
+  const [[{ videoSum }]] = await db.query(
+    `SELECT COALESCE(SUM(LEAST(lc.watched_percent, 100)), 0) / 100 AS videoSum
+     FROM lesson_completions lc JOIN lessons l ON lc.lesson_id = l.id
+     WHERE lc.student_id = ? AND l.course_id = ?`, [studentId, courseId]
+  );
+
+  // ===== Thành phần 2: BÀI TẬP thường (loại trừ test cuối khóa) = số bài đã nộp =====
+  const [[{ totalAssignments }]] = await db.query(
+    `SELECT COUNT(*) as totalAssignments FROM assignments WHERE course_id = ? AND is_final_test = 0`, [courseId]
+  );
   const [[{ completedAssignments }]] = await db.query(
     `SELECT COUNT(DISTINCT s.assignment_id) as completedAssignments
      FROM submissions s JOIN assignments a ON s.assignment_id = a.id
-     WHERE s.student_id = ? AND a.course_id = ?`, [studentId, courseId]
+     WHERE s.student_id = ? AND a.course_id = ? AND a.is_final_test = 0`, [studentId, courseId]
   );
 
-  const existing = await findByStudentAndCourse(studentId, courseId);
-  const completedLessons = existing ? existing.completed_lessons : 0;
-  const totalItems = totalLessons + totalAssignments;
-  const completedItems = completedLessons + completedAssignments;
-  const rate = totalItems > 0 ? Math.round((completedItems / totalItems) * 100 * 100) / 100 : 0;
+  // ===== Thành phần 3: TEST CUỐI KHÓA = điểm / điểm tối đa =====
+  const [finalRows] = await db.query(
+    `SELECT id, max_score FROM assignments WHERE course_id = ? AND is_final_test = 1 LIMIT 1`, [courseId]
+  );
+  let testFraction = 0;
+  const hasFinalTest = finalRows.length > 0 ? 1 : 0;
+  if (hasFinalTest) {
+    const max = Number(finalRows[0].max_score) > 0 ? Number(finalRows[0].max_score) : 10;
+    const [[res]] = await db.query(
+      `SELECT r.score FROM submissions s JOIN results r ON r.submission_id = s.id
+       WHERE s.assignment_id = ? AND s.student_id = ? ORDER BY r.id DESC LIMIT 1`,
+      [finalRows[0].id, studentId]
+    );
+    if (res && res.score != null) testFraction = Math.min(Number(res.score) / max, 1);
+  }
+
+  // ===== Tổng hợp: chia đều theo từng mục =====
+  const totalItems = Number(totalLessons) + Number(totalAssignments) + hasFinalTest;
+  const videoItems = Math.min(Number(videoSum), Number(totalLessons));
+  const completedItems = videoItems + Math.min(Number(completedAssignments), Number(totalAssignments)) + testFraction;
+  const rate = totalItems > 0 ? Math.min(Math.round((completedItems / totalItems) * 10000) / 100, 100) : 0;
   const status = rate >= 100 ? 'completed' : 'in_progress';
+
+  // completed_lessons (để hiển thị) = số bài đã xem >= 90%
+  const [[{ completedLessons }]] = await db.query(
+    `SELECT COUNT(*) as completedLessons FROM lesson_completions lc JOIN lessons l ON lc.lesson_id = l.id
+     WHERE lc.student_id = ? AND l.course_id = ? AND lc.watched_percent >= 90`, [studentId, courseId]
+  );
 
   await upsert(studentId, courseId, {
     completed_lessons: completedLessons,
@@ -78,4 +122,4 @@ const findAll = async () => {
   return rows;
 };
 
-module.exports = { findByStudentAndCourse, findByStudent, findByCourse, upsert, recalculate, findAll };
+module.exports = { findByStudentAndCourse, findByStudent, findByCourse, markLessonComplete, saveLessonWatch, upsert, recalculate, findAll };
