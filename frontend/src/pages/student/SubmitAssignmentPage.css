@@ -1,0 +1,174 @@
+.submit-assignment-summary {
+  margin-bottom: 24px;
+}
+
+.submit-assignment-summary p {
+  margin: 0 0 10px;
+  color: var(--text-secondary);
+}
+
+.submit-assignment-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.submit-feedback {
+  margin: 8px 0 0;
+  font-size: 13px;
+}
+
+.submit-question-list {
+  display: grid;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.submit-question-card {
+  margin: 0;
+}
+
+.submit-question-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+  font-weight: 700;
+}
+
+.submit-question-prompt {
+  margin: 0 0 14px;
+  color: var(--text-primary);
+  white-space: pre-wrap;
+}
+
+.submit-options {
+  display: grid;
+  gap: 10px;
+}
+
+.submit-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.45);
+  cursor: pointer;
+}
+
+.submit-option:hover {
+  border-color: var(--primary-color);
+}
+
+.submit-option input {
+  margin-top: 3px;
+}
+
+/* ===== Bài code tự chấm (LeetCode) ===== */
+.submit-code-examples {
+  background: #f8fafc;
+  border: 1px solid var(--border-color, #e2e8f0);
+  border-radius: 10px;
+  padding: 12px 14px;
+  margin-bottom: 12px;
+}
+.submit-code-example {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 8px;
+}
+.submit-code-example > div span {
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+  margin-bottom: 2px;
+}
+.submit-code-example pre {
+  margin: 0;
+  padding: 8px 10px;
+  background: #0f172a;
+  color: #e2e8f0;
+  border-radius: 8px;
+  font-size: 12.5px;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.submit-code-label { display: block; font-size: 13px; margin-bottom: 6px; color: var(--text-secondary); }
+.submit-code-editor {
+  background: #0f172a !important;
+  color: #e2e8f0 !important;
+  border-radius: 10px !important;
+  line-height: 1.5;
+}
+
+/* Kết quả chấm */
+.submit-report { margin-bottom: 20px; }
+.submit-report h3 { font-size: 17px; font-weight: 800; margin-bottom: 14px; }
+.submit-report-item { border-top: 1px solid var(--border-color, #e2e8f0); padding-top: 14px; margin-top: 14px; }
+.submit-report-item:first-of-type { border-top: none; padding-top: 0; margin-top: 0; }
+.submit-report-head { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+.submit-report-tests { display: flex; flex-direction: column; gap: 8px; }
+.submit-test {
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 13px;
+}
+.submit-test.pass { background: #ecfdf5; color: #15803d; }
+.submit-test.fail { background: #fef2f2; color: #b91c1c; }
+.submit-test-title { font-weight: 700; }
+.submit-test-detail { margin-top: 6px; font-size: 12.5px; color: #334155; display: flex; flex-direction: column; gap: 3px; }
+.submit-test-detail code { background: #fff; padding: 1px 6px; border-radius: 5px; border: 1px solid #e2e8f0; }
+.submit-test-err { color: #b91c1c; font-weight: 600; }
+@media (max-width: 640px) { .submit-code-example { grid-template-columns: 1fr; } }
+
+/* ===== Làm bài từng câu một (thanh số câu + điều hướng) ===== */
+.exam-qnav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+.exam-qnav-dot {
+  width: 38px;
+  height: 38px;
+  border-radius: 8px;
+  border: 1px solid var(--border-color, #c4b5fd);
+  background: #ffffff;
+  color: var(--text-secondary, #475569);
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.exam-qnav-dot:hover { border-color: var(--accent-primary, #6d28d9); }
+.exam-qnav-dot.done {
+  background: #dcfce7;
+  border-color: #86efac;
+  color: #166534;
+}
+.exam-qnav-dot.current {
+  border-color: var(--accent-primary, #6d28d9);
+  box-shadow: 0 0 0 2px rgba(109, 40, 217, 0.3);
+  color: var(--accent-primary, #6d28d9);
+}
+.exam-qnav-dot.current.done { color: #166534; border-color: #166534; }
+
+.exam-qactions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 16px;
+}
+.exam-qcounter {
+  font-weight: 700;
+  color: var(--text-secondary, #475569);
+  white-space: nowrap;
+}

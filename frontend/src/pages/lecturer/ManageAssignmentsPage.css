@@ -1,0 +1,146 @@
+.assignment-page-actions,
+.assignment-section-head,
+.assignment-row-actions,
+.assignment-builder-head,
+.assignment-question-title {
+  display: flex;
+  align-items: center;
+}
+
+.assignment-page-actions,
+.assignment-row-actions {
+  gap: 8px;
+}
+
+.assignment-section-head {
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.assignment-section-head h3 {
+  margin: 0;
+}
+
+.modal-content.modal-xl {
+  max-width: 980px;
+}
+
+.assignment-modal {
+  width: min(96vw, 980px);
+}
+
+.assignment-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.assignment-form-grid-4 {
+  grid-template-columns: 1.2fr 1fr 0.7fr 0.8fr;
+}
+
+.assignment-builder {
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 16px;
+  margin-top: 8px;
+  background: rgba(255, 255, 255, 0.45);
+}
+
+.assignment-builder-head {
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 14px;
+}
+
+.assignment-builder-head p {
+  margin: 4px 0 0;
+  color: var(--text-secondary);
+  font-size: 13px;
+}
+
+.assignment-count-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(160px, 1fr));
+  gap: 16px;
+}
+
+.assignment-question-list {
+  display: grid;
+  gap: 14px;
+}
+
+.assignment-question-card {
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  padding: 14px;
+  background: var(--bg-card);
+}
+
+.assignment-question-title {
+  justify-content: space-between;
+  margin-bottom: 12px;
+  font-weight: 700;
+}
+
+.assignment-options-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.assignment-option-row {
+  display: grid;
+  gap: 8px;
+}
+
+.assignment-option-row label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+@media (max-width: 900px) {
+  .assignment-form-grid,
+  .assignment-form-grid-4,
+  .assignment-options-grid,
+  .assignment-count-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .assignment-builder-head,
+  .assignment-row-actions {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
+
+/* ===== Builder bài code tự chấm ===== */
+.code-testcase-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.code-testcase-row {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  background: #f8fafc;
+  border: 1px solid var(--border-color, #e2e8f0);
+  border-radius: 10px;
+  padding: 10px;
+}
+.code-testcase-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: center;
+  white-space: nowrap;
+  font-size: 12px;
+}
+@media (max-width: 640px) {
+  .code-testcase-row { flex-direction: column; }
+}

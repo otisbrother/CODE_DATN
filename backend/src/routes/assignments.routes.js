@@ -5,8 +5,8 @@ const authMiddleware = require('../middlewares/auth.middleware');
 const roleMiddleware = require('../middlewares/role.middleware');
 
 // Assignments CRUD
-router.get('/course/:courseId', ctrl.getAssignmentsByCourse);
-router.get('/:id', ctrl.getAssignmentById);
+router.get('/course/:courseId', authMiddleware.optional, ctrl.getAssignmentsByCourse);
+router.get('/:id', authMiddleware, ctrl.getAssignmentById);
 router.post('/', authMiddleware, roleMiddleware('lecturer', 'admin'), ctrl.createAssignment);
 router.put('/:id', authMiddleware, roleMiddleware('lecturer', 'admin'), ctrl.updateAssignment);
 router.delete('/:id', authMiddleware, roleMiddleware('lecturer', 'admin'), ctrl.deleteAssignment);

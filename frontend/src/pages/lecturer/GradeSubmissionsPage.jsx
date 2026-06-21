@@ -20,11 +20,19 @@ export default function GradeSubmissionsPage() {
       ]);
       setAssignment(aRes.data.data);
       setSubmissions(sRes.data.data || []);
-    } catch (e) { console.error(e); }
+    } catch (e) {
+      console.error(e);
+    }
     setLoading(false);
   };
 
   useEffect(() => { load(); }, [assignmentId]);
+
+  const openGrade = (submission) => {
+    setGrading(submission.id);
+    setScore(submission.score ?? '');
+    setFeedback(submission.feedback || '');
+  };
 
   const handleGrade = async () => {
     try {
@@ -35,7 +43,9 @@ export default function GradeSubmissionsPage() {
       setFeedback('');
       load();
       setTimeout(() => setMsg(''), 3000);
-    } catch (e) { setMsg(e.response?.data?.message || 'Lỗi chấm điểm'); }
+    } catch (e) {
+      setMsg(e.response?.data?.message || 'Lỗi chấm điểm');
+    }
   };
 
   if (loading) return <div className="loading">Đang tải...</div>;
@@ -43,12 +53,11 @@ export default function GradeSubmissionsPage() {
   return (
     <div>
       <div className="page-header">
-        <h1>Chấm điểm: {assignment?.title}</h1>
+        <h1>Bài nộp: {assignment?.title}</h1>
         <Link to={`/lecturer/courses/${assignment?.course_id}/assignments`} className="btn btn-outline btn-sm">← Quay lại</Link>
       </div>
       {msg && <div className="alert alert-success">{msg}</div>}
 
-      {/* MODAL chấm điểm */}
       {grading && (
         <div className="modal-overlay" onClick={() => setGrading(null)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
@@ -56,10 +65,28 @@ export default function GradeSubmissionsPage() {
               <h3>Chấm điểm bài nộp #{grading}</h3>
               <button className="modal-close" onClick={() => setGrading(null)}>×</button>
             </div>
-            <div className="form-group"><label>Điểm (/{assignment?.max_score})</label>
-              <input type="number" className="form-control" value={score} onChange={(e) => setScore(e.target.value)} max={assignment?.max_score} min={0} step={0.5} /></div>
-            <div className="form-group"><label>Nhận xét</label>
-              <textarea className="form-control" rows={3} value={feedback} onChange={(e) => setFeedback(e.target.value)} placeholder="Nhận xét cho học viên..." /></div>
+            <div className="form-group">
+              <label>Điểm (/10)</label>
+              <input
+                type="number"
+                className="form-control"
+                value={score}
+                onChange={(e) => setScore(e.target.value)}
+                max={10}
+                min={0}
+                step={0.25}
+              />
+            </div>
+            <div className="form-group">
+              <label>Nhận xét</label>
+              <textarea
+                className="form-control"
+                rows={3}
+                value={feedback}
+                onChange={(e) => setFeedback(e.target.value)}
+                placeholder="Nhận xét cho học viên..."
+              />
+            </div>
             <div className="modal-actions">
               <button className="btn btn-success" onClick={handleGrade}>Lưu điểm</button>
               <button className="btn btn-outline" onClick={() => setGrading(null)}>Hủy</button>
@@ -70,17 +97,37 @@ export default function GradeSubmissionsPage() {
 
       <div className="table-container">
         <table>
-          <thead><tr><th>Học viên</th><th>Ngày nộp</th><th>Nội dung</th><th>Trạng thái</th><th>Thao tác</th></tr></thead>
+          <thead>
+            <tr>
+              <th>Học viên</th>
+              <th>Ngày nộp</th>
+              <th>Nội dung</th>
+              <th>Điểm</th>
+              <th>Nhận xét</th>
+              <th>Trạng thái</th>
+              <th>Thao tác</th>
+            </tr>
+          </thead>
           <tbody>
-            {submissions.map((s) => (
-              <tr key={s.id}>
-                <td><strong>{s.student_name}</strong></td>
-                <td>{s.submitted_at ? new Date(s.submitted_at).toLocaleDateString('vi-VN') : '-'}</td>
-                <td style={{ maxWidth: 300, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.content?.substring(0, 80) || '-'}</td>
-                <td><span className={`badge ${s.status === 'graded' ? 'badge-success' : 'badge-warning'}`}>{s.status === 'graded' ? 'Đã chấm' : 'Chờ chấm'}</span></td>
+            {submissions.map((submission) => (
+              <tr key={submission.id}>
+                <td><strong>{submission.student_name}</strong></td>
+                <td>{submission.submitted_at ? new Date(submission.submitted_at).toLocaleDateString('vi-VN') : '-'}</td>
+                <td style={{ maxWidth: 300, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {submission.content?.substring(0, 100) || '-'}
+                </td>
+                <td>{submission.score !== null && submission.score !== undefined ? `${submission.score}/10` : '-'}</td>
+                <td style={{ maxWidth: 260, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {submission.feedback || '-'}
+                </td>
                 <td>
-                  <button className="btn btn-primary btn-sm" onClick={() => { setGrading(s.id); setScore(''); setFeedback(''); }}>
-                    {s.status === 'graded' ? 'Sửa điểm' : 'Chấm điểm'}
+                  <span className={`badge ${submission.status === 'graded' ? 'badge-success' : 'badge-warning'}`}>
+                    {submission.status === 'graded' ? 'Đã chấm' : 'Chờ chấm'}
+                  </span>
+                </td>
+                <td>
+                  <button className="btn btn-primary btn-sm" onClick={() => openGrade(submission)}>
+                    {submission.status === 'graded' ? 'Sửa điểm' : 'Chấm điểm'}
                   </button>
                 </td>
               </tr>
@@ -88,7 +135,9 @@ export default function GradeSubmissionsPage() {
           </tbody>
         </table>
       </div>
-      {submissions.length === 0 && <p style={{ color: 'var(--text-secondary)', marginTop: 20 }}>Chưa có bài nộp.</p>}
+      {submissions.length === 0 && (
+        <p style={{ color: 'var(--text-secondary)', marginTop: 20 }}>Chưa có bài nộp.</p>
+      )}
     </div>
   );
 }
