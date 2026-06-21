@@ -8,6 +8,8 @@ router.use(authMiddleware);
 router.post('/', roleMiddleware('student'), enrollController.enroll);
 router.get('/my', roleMiddleware('student'), enrollController.getMyEnrollments);
 router.get('/check/:courseId', roleMiddleware('student'), enrollController.checkEnrollment);
+router.post('/preserve/:courseId', roleMiddleware('student'), enrollController.preserveEnrollment);
+router.post('/resume/:courseId', roleMiddleware('student'), enrollController.resumeEnrollment);
 router.get('/course/:courseId', roleMiddleware('lecturer', 'admin'), enrollController.getCourseEnrollments);
 
 module.exports = router;

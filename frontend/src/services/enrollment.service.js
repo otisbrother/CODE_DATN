@@ -5,6 +5,8 @@ export const enrollmentService = {
   checkEnrollment: (courseId) => axiosClient.get(`/enrollments/check/${courseId}`),
   getMyEnrollments: () => axiosClient.get('/enrollments/my'),
   getCourseEnrollments: (courseId) => axiosClient.get(`/enrollments/course/${courseId}`),
+  preserveEnrollment: (courseId, payload) => axiosClient.post(`/enrollments/preserve/${courseId}`, payload || {}),
+  resumeEnrollment: (courseId) => axiosClient.post(`/enrollments/resume/${courseId}`),
 };
 
 export const paymentService = {

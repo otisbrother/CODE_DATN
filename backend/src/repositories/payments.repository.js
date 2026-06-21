@@ -10,10 +10,14 @@ const create = async (data) => {
 
 const findById = async (id) => {
   const [rows] = await db.query(
-    `SELECT p.*, u.full_name as user_name, u.email as user_email, c.title as course_title
+    `SELECT p.*, u.full_name as user_name, u.email as user_email, c.title as course_title,
+            vu.voucher_id, vu.discount_percent, vu.original_amount, vu.discount_amount, vu.final_amount,
+            v.code as voucher_code, v.name as voucher_name
      FROM payments p
      JOIN users u ON p.user_id = u.id
      LEFT JOIN courses c ON p.course_id = c.id
+     LEFT JOIN voucher_usages vu ON vu.payment_id = p.id
+     LEFT JOIN vouchers v ON v.id = vu.voucher_id
      WHERE p.id = ?`, [id]
   );
   return rows[0] || null;
@@ -33,19 +37,25 @@ const updateAmount = async (id, amount) => {
 
 const findByUser = async (userId) => {
   const [rows] = await db.query(
-    `SELECT p.*, c.title as course_title
+    `SELECT p.*, c.title as course_title,
+            vu.discount_amount, vu.original_amount, v.code as voucher_code, v.name as voucher_name
      FROM payments p
      LEFT JOIN courses c ON p.course_id = c.id
+     LEFT JOIN voucher_usages vu ON vu.payment_id = p.id
+     LEFT JOIN vouchers v ON v.id = vu.voucher_id
      WHERE p.user_id = ? ORDER BY p.id DESC`, [userId]
   );
   return rows;
 };
 
 const findAll = async (status) => {
-  let sql = `SELECT p.*, u.full_name as user_name, u.email as user_email, c.title as course_title
+  let sql = `SELECT p.*, u.full_name as user_name, u.email as user_email, c.title as course_title,
+            vu.discount_amount, vu.original_amount, v.code as voucher_code, v.name as voucher_name
      FROM payments p
      JOIN users u ON p.user_id = u.id
-     LEFT JOIN courses c ON p.course_id = c.id`;
+     LEFT JOIN courses c ON p.course_id = c.id
+     LEFT JOIN voucher_usages vu ON vu.payment_id = p.id
+     LEFT JOIN vouchers v ON v.id = vu.voucher_id`;
   const params = [];
   if (status) {
     sql += ` WHERE p.payment_status = ?`;
