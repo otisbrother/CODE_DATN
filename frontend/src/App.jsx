@@ -6,6 +6,8 @@ import DashboardLayout from './layouts/DashboardLayout';
 
 // Home
 import HomePage from './pages/home/HomePage';
+import VoucherPage from './pages/home/VoucherPage';
+import LecturerProfilePage from './pages/home/LecturerProfilePage';
 
 // Student
 import StudentDashboard from './pages/student/StudentDashboard';
@@ -16,6 +18,7 @@ import SubmitAssignmentPage from './pages/student/SubmitAssignmentPage';
 import MySubmissionsPage from './pages/student/MySubmissionsPage';
 import MyProgressPage from './pages/student/MyProgressPage';
 import AIChatPage from './pages/student/AIChatPage';
+import StudySchedulePage from './pages/student/StudySchedulePage';
 
 // Lecturer
 import LecturerDashboard from './pages/lecturer/LecturerDashboard';
@@ -26,14 +29,17 @@ import ManageAssignmentsPage from './pages/lecturer/ManageAssignmentsPage';
 import GradeSubmissionsPage from './pages/lecturer/GradeSubmissionsPage';
 import ManageAIDataPage from './pages/lecturer/ManageAIDataPage';
 import StudentProgressPage from './pages/lecturer/StudentProgressPage';
+import LecturerProgressOverview from './pages/lecturer/LecturerProgressOverview';
+import MyProfilePage from './pages/lecturer/MyProfilePage';
 
 // Admin
 import AdminDashboard from './pages/admin/AdminDashboard';
 import ManageUsersPage from './pages/admin/ManageUsersPage';
-import ManageAIApprovePage from './pages/admin/ManageAIApprovePage';
+
 import AdminCoursesPage from './pages/admin/AdminCoursesPage';
 import AdminProgressPage from './pages/admin/AdminProgressPage';
 import PaymentHistoryPage from './pages/admin/PaymentHistoryPage';
+import ManageVouchersPage from './pages/admin/ManageVouchersPage';
 
 function ProtectedRoute({ children, allowedRoles }) {
   const { isAuthenticated, user } = useAuthStore();
@@ -48,6 +54,8 @@ export default function App() {
       <Routes>
         {/* Public routes */}
         <Route path="/" element={<HomePage />} />
+        <Route path="/voucher/:voucherId" element={<VoucherPage />} />
+        <Route path="/giang-vien/:id" element={<LecturerProfilePage />} />
         <Route path="/login" element={<Navigate to="/" replace />} />
         <Route path="/register" element={<Navigate to="/" replace />} />
 
@@ -65,6 +73,7 @@ export default function App() {
           <Route path="submissions" element={<MySubmissionsPage />} />
           <Route path="progress" element={<MyProgressPage />} />
           <Route path="ai-chat" element={<AIChatPage />} />
+          <Route path="schedule" element={<StudySchedulePage />} />
         </Route>
 
         {/* Lecturer routes */}
@@ -80,8 +89,10 @@ export default function App() {
           <Route path="courses/:courseId/lessons" element={<ManageLessonsPage />} />
           <Route path="courses/:courseId/assignments" element={<ManageAssignmentsPage />} />
           <Route path="courses/:courseId/progress" element={<StudentProgressPage />} />
+          <Route path="progress" element={<LecturerProgressOverview />} />
           <Route path="assignments/:assignmentId/grade" element={<GradeSubmissionsPage />} />
           <Route path="ai-data" element={<ManageAIDataPage />} />
+          <Route path="profile" element={<MyProfilePage />} />
         </Route>
 
         {/* Admin routes */}
@@ -95,7 +106,8 @@ export default function App() {
           <Route path="courses" element={<AdminCoursesPage />} />
           <Route path="progress" element={<AdminProgressPage />} />
           <Route path="payments" element={<PaymentHistoryPage />} />
-          <Route path="ai-approve" element={<ManageAIApprovePage />} />
+          <Route path="vouchers" element={<ManageVouchersPage />} />
+
         </Route>
 
         {/* 404 */}

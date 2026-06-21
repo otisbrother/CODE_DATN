@@ -132,13 +132,77 @@
   background: #fee2e2;
 }
 .main-content {
+  --bg-primary: #ede9fe;
+  --bg-secondary: #f5f3ff;
+  --bg-card: #f5f3ff;
+  --bg-input: #ede9fe;
+  --bg-hover: #ddd6fe;
+  --border-color: #c4b5fd;
+  --shadow-card: 0 8px 24px rgba(88, 28, 135, 0.12);
+  --shadow: 0 14px 36px rgba(88, 28, 135, 0.18);
   flex: 1;
   margin-left: var(--sidebar-width);
   padding: 30px;
   transition: var(--transition);
   min-height: 100vh;
-  background: var(--bg-primary);
+  background:
+    radial-gradient(circle at top right, rgba(167, 139, 250, 0.55), transparent 32%),
+    linear-gradient(135deg, #ede9fe 0%, #ddd6fe 52%, #c4b5fd 100%);
 }
 .sidebar.closed ~ .main-content {
   margin-left: 68px;
+}
+
+/* ===== Chế độ thi toàn màn hình (Test cuối khóa): ẩn sidebar + trợ lý AI, dùng hết bề ngang ===== */
+body.exam-mode .sidebar { display: none !important; }
+body.exam-mode .main-content { margin-left: 0 !important; }
+body.exam-mode .lesson-ai-bubble,
+body.exam-mode .lesson-ai-window { display: none !important; }
+body.exam-mode .study-reminder-toast { display: none !important; }
+
+.main-content .card,
+.main-content .stat-card,
+.main-content .table-container,
+.main-content .modal-content,
+.main-content .course-sidebar-card,
+.main-content .cd-accordion,
+.main-content .cd-chapter,
+.main-content .payment-modal,
+.main-content .success-overlay-content,
+.main-content .locked-notice-modal,
+.main-content .chat-sidebar,
+.main-content .chat-main,
+.main-content .chat-header,
+.main-content .chat-input-area,
+.main-content .chatbot-widget,
+.main-content .chatbot-body,
+.main-content .chatbot-msg.bot .chatbot-msg-content,
+.main-content .chatbot-input-area,
+.main-content .chatbot-quick-btn {
+  background: #f5f3ff;
+  border-color: #c4b5fd;
+}
+
+.main-content th,
+.main-content .form-control,
+.main-content .modal-close,
+.main-content .progress-bar,
+.main-content .sidebar-tabs button,
+.main-content .payment-bank-info,
+.main-content .success-loader,
+.main-content .chat-messages,
+.main-content .chatbot-messages {
+  background: #ede9fe;
+}
+
+.main-content tr:hover td,
+.main-content .cd-accordion-header:hover,
+.main-content .cd-lesson-item:hover,
+.main-content .btn-outline:hover {
+  background: #ddd6fe;
+}
+
+.main-content .stat-card:hover,
+.main-content .card:hover {
+  border-color: #a78bfa;
 }

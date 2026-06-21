@@ -199,6 +199,7 @@ tr:last-child td {
 .badge-danger { background: #fee2e2; color: #dc2626; }
 .badge-info { background: #dbeafe; color: #2563eb; }
 .badge-primary { background: #e0e7ff; color: #4338ca; }
+.badge-secondary { background: #e2e8f0; color: #475569; }
 
 /* Layout */
 .page-header {
@@ -393,3 +394,23 @@ tr:last-child td {
 ::-webkit-scrollbar-thumb:hover {
   background: #94a3b8;
 }
+
+/* ===== Tooltip cho biểu đồ (MiniChart) ===== */
+.chart-tooltip {
+  position: absolute;
+  z-index: 20;
+  pointer-events: none;
+  background: #0f172a;
+  color: #fff;
+  padding: 7px 11px;
+  border-radius: 8px;
+  font-size: 12px;
+  line-height: 1.45;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+  transform: translateY(-100%);
+  white-space: nowrap;
+}
+.chart-tooltip-title { font-weight: 700; margin-bottom: 1px; }
+.chart-tooltip-row { color: #cbd5e1; }
+.chart-wrap svg rect[fill="transparent"] { cursor: pointer; }
+.chart-wrap svg path { cursor: pointer; }

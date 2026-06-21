@@ -1,12 +1,21 @@
-import { useState } from 'react';
-
-export default function ConfirmModal({ show, title, message, onConfirm, onCancel }) {
+export default function ConfirmModal({
+  show,
+  title,
+  message,
+  icon = '⚠️',
+  confirmText = 'Xóa',
+  cancelText = 'Hủy',
+  confirmClassName = 'btn btn-danger',
+  confirmStyle,
+  onConfirm,
+  onCancel,
+}) {
   if (!show) return null;
 
   return (
     <div className="modal-overlay" onClick={onCancel}>
       <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 420, textAlign: 'center' }}>
-        <div style={{ fontSize: 48, marginBottom: 16 }}>⚠️</div>
+        <div style={{ fontSize: 48, marginBottom: 16 }}>{icon}</div>
         <h3 style={{ fontSize: 18, fontWeight: 700, marginBottom: 8, color: 'var(--text-primary)' }}>
           {title || 'Xác nhận'}
         </h3>
@@ -14,8 +23,8 @@ export default function ConfirmModal({ show, title, message, onConfirm, onCancel
           {message || 'Bạn có chắc chắn muốn thực hiện thao tác này?'}
         </p>
         <div style={{ display: 'flex', gap: 10, justifyContent: 'center' }}>
-          <button className="btn btn-danger" onClick={onConfirm} style={{ minWidth: 120 }}>Xóa</button>
-          <button className="btn btn-outline" onClick={onCancel} style={{ minWidth: 120 }}>Hủy</button>
+          <button className={confirmClassName} onClick={onConfirm} style={{ minWidth: 120, ...confirmStyle }}>{confirmText}</button>
+          <button className="btn btn-outline" onClick={onCancel} style={{ minWidth: 120 }}>{cancelText}</button>
         </div>
       </div>
     </div>
