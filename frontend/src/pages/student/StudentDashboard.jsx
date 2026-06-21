@@ -4,6 +4,7 @@ import { progressService } from '../../services/progress.service';
 import { assignmentService } from '../../services/assignment.service';
 import useAuthStore from '../../store/auth.store';
 import { FiBook, FiCheckCircle, FiBarChart2, FiFileText } from 'react-icons/fi';
+import { BarChart } from '../../components/charts/MiniChart';
 
 export default function StudentDashboard() {
   const { user } = useAuthStore();
@@ -58,6 +59,23 @@ export default function StudentDashboard() {
           <div className="stat-info"><h3>{submissions.length}</h3><p>Bài đã nộp</p></div>
         </div>
       </div>
+
+      {progress.length > 0 && (
+        <div className="card" style={{ marginBottom: 24 }}>
+          <h2 style={{ fontSize: 18, marginBottom: 2 }}>📊 Tiến độ theo khóa học</h2>
+          <p style={{ color: 'var(--text-secondary)', fontSize: 13, marginBottom: 12 }}>
+            Trung bình {avgRate}% · di chuột vào cột để xem chi tiết
+          </p>
+          <BarChart
+            data={progress.map((p) => ({ name: p.course_title, rate: Math.round(Number(p.completion_rate) || 0) }))}
+            labelKey="name"
+            valueKey="rate"
+            unit="%"
+            color="#4f46e5"
+            height={240}
+          />
+        </div>
+      )}
 
       <h2 style={{ marginBottom: 16, fontSize: 18 }}>Khóa học gần đây</h2>
       <div className="courses-grid">

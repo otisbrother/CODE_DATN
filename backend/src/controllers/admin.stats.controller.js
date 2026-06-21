@@ -57,6 +57,76 @@ const getStats = asyncHandler(async (req, res) => {
      ORDER BY e.enrolled_at DESC LIMIT 10`
   );
 
+  // ---- CHART DATA ----
+
+  // Monthly revenue (last 6 months)
+  const [monthlyRevenue] = await db.query(
+    `SELECT DATE_FORMAT(paid_at, '%Y-%m') as month,
+            COALESCE(SUM(total_amount), 0) as revenue,
+            COUNT(*) as payment_count
+     FROM payments
+     WHERE payment_status = 'completed'
+       AND paid_at >= DATE_SUB(CURDATE(), INTERVAL 6 MONTH)
+     GROUP BY DATE_FORMAT(paid_at, '%Y-%m')
+     ORDER BY month ASC`
+  );
+
+  // Monthly enrollments (last 6 months)
+  const [monthlyEnrollments] = await db.query(
+    `SELECT DATE_FORMAT(enrolled_at, '%Y-%m') as month,
+            COUNT(*) as count
+     FROM enrollments
+     WHERE enrolled_at >= DATE_SUB(CURDATE(), INTERVAL 6 MONTH)
+     GROUP BY DATE_FORMAT(enrolled_at, '%Y-%m')
+     ORDER BY month ASC`
+  );
+
+  // Enrollment access status distribution
+  const [enrollmentsByStatus] = await db.query(
+    `SELECT access_status, COUNT(*) as count FROM enrollments GROUP BY access_status`
+  );
+
+  // Revenue per course (top 5)
+  const [revenuePerCourse] = await db.query(
+    `SELECT c.id, c.title, COALESCE(SUM(p.total_amount), 0) as revenue
+     FROM courses c
+     LEFT JOIN payments p ON p.course_id = c.id AND p.payment_status = 'completed'
+     GROUP BY c.id, c.title
+     HAVING revenue > 0
+     ORDER BY revenue DESC
+     LIMIT 5`
+  );
+
+  // AI usage stats
+  const [[{ totalConversations }]] = await db.query(`SELECT COUNT(*) as totalConversations FROM ai_conversations`);
+  const [[{ totalAiMessages }]] = await db.query(`SELECT COUNT(*) as totalAiMessages FROM ai_messages`);
+  const [[{ approvedAiData }]] = await db.query(`SELECT COUNT(*) as approvedAiData FROM ai_data_sources WHERE status = 'approved'`);
+
+  // Monthly AI messages (last 6 months)
+  const [monthlyAiMessages] = await db.query(
+    `SELECT DATE_FORMAT(created_at, '%Y-%m') as month,
+            COUNT(*) as count
+     FROM ai_messages
+     WHERE created_at >= DATE_SUB(CURDATE(), INTERVAL 6 MONTH)
+     GROUP BY DATE_FORMAT(created_at, '%Y-%m')
+     ORDER BY month ASC`
+  );
+
+  // New users per month (last 6 months)
+  const [monthlyNewUsers] = await db.query(
+    `SELECT DATE_FORMAT(created_at, '%Y-%m') as month,
+            COUNT(*) as count
+     FROM users
+     WHERE created_at >= DATE_SUB(CURDATE(), INTERVAL 6 MONTH)
+     GROUP BY DATE_FORMAT(created_at, '%Y-%m')
+     ORDER BY month ASC`
+  );
+
+  // Average completion rate
+  const [[{ avgCompletionRate }]] = await db.query(
+    `SELECT COALESCE(ROUND(AVG(completion_rate), 1), 0) as avgCompletionRate FROM learning_progress`
+  );
+
   return ApiResponse.success(res, {
     usersByRole,
     coursesByStatus,
@@ -69,6 +139,17 @@ const getStats = asyncHandler(async (req, res) => {
     pendingAI,
     topCourses,
     recentEnrollments,
+    // Chart data
+    monthlyRevenue,
+    monthlyEnrollments,
+    enrollmentsByStatus,
+    revenuePerCourse,
+    totalConversations,
+    totalAiMessages,
+    approvedAiData,
+    monthlyAiMessages,
+    monthlyNewUsers,
+    avgCompletionRate,
   });
 });
 
