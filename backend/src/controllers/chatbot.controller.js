@@ -21,6 +21,7 @@ const askChatbot = async (req, res) => {
       answer: result.answer,
       source: result.source,
       session_id: sessionId,
+      related_courses: result.related_courses || [],
     });
   } catch (err) {
     console.error('Chatbot error:', err);
