@@ -1,19 +1,21 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { courseService } from '../../services/course.service';
+import { lecturerService } from '../../services/lecturer.service';
+import { voucherService } from '../../services/voucher.service';
 import { authService } from '../../services/auth.service';
 import useAuthStore from '../../store/auth.store';
 import ChatbotWidget from '../../components/ChatbotWidget';
 import './HomePage.css';
 
-const slides = [
+const defaultSlides = [
   { img: '/images/hero1.png', title: 'Học lập trình cùng chuyên gia', sub: 'Nền tảng E-Learning hàng đầu với AI hỗ trợ hỏi đáp 24/7' },
-  { img: '/images/hero2.png', title: 'Giảng viên chất lượng cao', sub: 'Đội ngũ giảng viên giàu kinh nghiệm, bài giảng cập nhật liên tục' },
+  { img: '/images/hero2.png', title: 'Giáo viên chất lượng cao', sub: 'Đội ngũ giáo viên giàu kinh nghiệm, bài giảng cập nhật liên tục' },
   { img: '/images/hero3.png', title: 'AI hỗ trợ học tập thông minh', sub: 'Công nghệ AI giải đáp mọi thắc mắc, cá nhân hóa lộ trình học' },
 ];
 
 const features = [
-  { icon: '🎓', title: 'Giảng viên hàng đầu', desc: 'Đội ngũ giảng viên có kinh nghiệm thực tế, giàu năng lực sư phạm.' },
+  { icon: '🎓', title: 'Giáo viên hàng đầu', desc: 'Đội ngũ giáo viên có kinh nghiệm thực tế, giàu năng lực sư phạm.' },
   { icon: '🤖', title: 'AI Hỏi đáp 24/7', desc: 'Hệ thống AI thông minh giải đáp thắc mắc bất cứ lúc nào.' },
   { icon: '📊', title: 'Theo dõi tiến độ', desc: 'Quản lý quá trình học, bài nộp và điểm số một cách trực quan.' },
   { icon: '💰', title: 'Học phí hợp lý', desc: 'Chi phí phải chăng với nội dung chất lượng cao, cập nhật liên tục.' },
@@ -21,8 +23,12 @@ const features = [
 
 export default function HomePage() {
   const [courses, setCourses] = useState([]);
+  const [lecturers, setLecturers] = useState([]);
+  const [promotions, setPromotions] = useState([]);
   const [currentSlide, setCurrentSlide] = useState(0);
-  const [showLogin, setShowLogin] = useState(false);
+  const [showLogin, setShowLogin] = useState(() =>
+    !!localStorage.getItem('pendingCourseId') && !localStorage.getItem('token')
+  );
   const [showRegister, setShowRegister] = useState(false);
   const [loginForm, setLoginForm] = useState({ email: '', password: '' });
   const [loginError, setLoginError] = useState('');
@@ -31,7 +37,7 @@ export default function HomePage() {
   const [registerError, setRegisterError] = useState('');
   const [registerLoading, setRegisterLoading] = useState(false);
   const [registerSuccess, setRegisterSuccess] = useState('');
-  const [pendingCourseId, setPendingCourseId] = useState(null);
+  const [pendingCourseId, setPendingCourseId] = useState(() => localStorage.getItem('pendingCourseId') || null);
   const { isAuthenticated, user, setAuth } = useAuthStore();
   const navigate = useNavigate();
   const intervalRef = useRef(null);
@@ -40,7 +46,7 @@ export default function HomePage() {
   const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
   useEffect(() => {
-    courseService.getAll({ status: 'published', limit: 20 })
+    courseService.getAll({ status: 'published', limit: 100 })
       .then(res => {
         const visibleCourses = (res.data.data || []).filter(
           course => !course.title?.toLowerCase().includes('reactjs')
@@ -48,20 +54,56 @@ export default function HomePage() {
         setCourses(visibleCourses);
       })
       .catch(console.error);
+
+    voucherService.getPublicPromotions({ limit: 3 })
+      .then(res => setPromotions(res.data.data || []))
+      .catch(console.error);
+
+    lecturerService.getAll()
+      .then(res => setLecturers(res.data.data || []))
+      .catch(console.error);
   }, []);
+
+  // Khoa hoc duoc nho tu trang giang vien: da dang nhap -> mo thang; chua thi giu de mo sau khi login
+  useEffect(() => {
+    const pid = localStorage.getItem('pendingCourseId');
+    if (!pid) return;
+    localStorage.removeItem('pendingCourseId');
+    if (localStorage.getItem('token')) {
+      navigate(`/student/course/${pid}`);
+    }
+  }, [navigate]);
+
+  const formatDiscount = (voucher) => {
+    const min = Number(voucher.min_discount_percent || 0);
+    const max = Number(voucher.max_discount_percent || 0);
+    return min === max ? `${max}%` : `${min}% - ${max}%`;
+  };
+
+  const heroSlides = [
+    ...defaultSlides,
+    ...promotions.map((voucher) => ({
+      type: 'voucher',
+      id: voucher.id,
+      img: '/images/hero2.png',
+      title: `${voucher.name} - Giảm ${formatDiscount(voucher)}`,
+      sub: `Mã ${voucher.code} | Áp dụng cho: ${voucher.course_titles || `${voucher.course_count || 0} khóa học đang mở`}`,
+      voucher,
+    })),
+  ];
 
   // Auto slide
   useEffect(() => {
     intervalRef.current = setInterval(() => {
-      setCurrentSlide(prev => (prev + 1) % slides.length);
+      setCurrentSlide(prev => (prev + 1) % heroSlides.length);
     }, 5000);
     return () => clearInterval(intervalRef.current);
-  }, []);
+  }, [heroSlides.length]);
 
   const goSlide = (i) => {
     setCurrentSlide(i);
     clearInterval(intervalRef.current);
-    intervalRef.current = setInterval(() => setCurrentSlide(prev => (prev + 1) % slides.length), 5000);
+    intervalRef.current = setInterval(() => setCurrentSlide(prev => (prev + 1) % heroSlides.length), 5000);
   };
 
   const requireLogin = () => {
@@ -73,12 +115,13 @@ export default function HomePage() {
     }
   };
 
-  const handleCourseClick = (courseId) => {
+  const handleCourseClick = (courseId, voucherCode = '') => {
     if (!isAuthenticated) {
       setPendingCourseId(courseId);
       requireLogin();
     } else {
-      navigate(`/student/course/${courseId}`);
+      const voucherQuery = voucherCode ? `?voucher=${encodeURIComponent(voucherCode)}` : '';
+      navigate(`/student/course/${courseId}${voucherQuery}`);
     }
   };
 
@@ -229,6 +272,7 @@ export default function HomePage() {
           <Link to="/" className="home-logo">🎓 E-Learning AI</Link>
           <div className="home-nav-links">
             <a href="#courses">Khóa học</a>
+            <a href="#instructors">Giáo viên</a>
             <a href="#features">Tính năng</a>
             <a href="#about">Giới thiệu</a>
           </div>
@@ -349,32 +393,44 @@ export default function HomePage() {
 
       {/* HERO SLIDER */}
       <section className="hero-slider">
-        {slides.map((s, i) => (
+        {heroSlides.map((s, i) => (
           <div key={i} className={`hero-slide ${i === currentSlide ? 'active' : ''}`}>
             <img src={s.img} alt={s.title} />
             <div className="hero-overlay">
-              <div className="hero-content">
+              <div className={`hero-content ${s.type === 'voucher' ? 'hero-content-voucher' : ''}`}>
+                {s.type === 'voucher' && <span className="hero-voucher-kicker">Voucher đang mở</span>}
                 <h1>{s.title}</h1>
                 <p>{s.sub}</p>
+                {s.type === 'voucher' && (
+                  <div className="hero-voucher-courses">
+                    {String(s.voucher.course_titles || '').split(', ').filter(Boolean).slice(0, 3).map((title) => (
+                      <span key={title}>{title}</span>
+                    ))}
+                  </div>
+                )}
                 <div className="hero-btns">
-                  {isAuthenticated ? (
+                  {s.type === 'voucher' ? (
+                    <Link to={`/voucher/${s.id}`} className="btn btn-primary btn-lg">Xem khóa học áp dụng</Link>
+                  ) : isAuthenticated ? (
                     <Link to={`/${user?.role}`} className="btn btn-primary btn-lg">Vào học ngay</Link>
                   ) : (
                     <button className="btn btn-primary btn-lg" onClick={requireLogin}>Bắt đầu học miễn phí</button>
                   )}
-                  <a href="#courses" className="btn btn-outline btn-lg" style={{ color: '#fff', borderColor: '#fff' }}>Xem khóa học</a>
+                  {s.type !== 'voucher' && (
+                    <a href="#courses" className="btn btn-outline btn-lg" style={{ color: '#fff', borderColor: '#fff' }}>Xem khóa học</a>
+                  )}
                 </div>
               </div>
             </div>
           </div>
         ))}
         <div className="slider-dots">
-          {slides.map((_, i) => (
+          {heroSlides.map((_, i) => (
             <button key={i} className={`dot ${i === currentSlide ? 'active' : ''}`} onClick={() => goSlide(i)} />
           ))}
         </div>
-        <button className="slider-arrow left" onClick={() => goSlide((currentSlide - 1 + slides.length) % slides.length)}>❮</button>
-        <button className="slider-arrow right" onClick={() => goSlide((currentSlide + 1) % slides.length)}>❯</button>
+        <button className="slider-arrow left" onClick={() => goSlide((currentSlide - 1 + heroSlides.length) % heroSlides.length)}>❮</button>
+        <button className="slider-arrow right" onClick={() => goSlide((currentSlide + 1) % heroSlides.length)}>❯</button>
       </section>
 
       {/* STATS BAR */}
@@ -382,7 +438,7 @@ export default function HomePage() {
         <div className="stats-bar-inner">
           <div className="stat-item"><span className="stat-num">{courses.length}+</span><span>Khóa học</span></div>
           <div className="stat-item"><span className="stat-num">5000+</span><span>Học viên</span></div>
-          <div className="stat-item"><span className="stat-num">100%</span><span>Giảng viên chất lượng</span></div>
+          <div className="stat-item"><span className="stat-num">100%</span><span>Giáo viên chất lượng</span></div>
           <div className="stat-item"><span className="stat-num">24/7</span><span>AI Hỗ trợ</span></div>
         </div>
       </section>
@@ -402,10 +458,38 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* NGƯỜI TRUYỀN LỬA — đội ngũ giáo viên */}
+      {lecturers.length > 0 && (
+        <section className="home-section instructors-section" id="instructors">
+          <h2 className="section-title">🔥 Người Truyền Lửa</h2>
+          <p className="section-subtitle">Đội ngũ giáo viên hàng đầu, đồng hành cùng bạn trên mỗi khóa học</p>
+          <div className="instructors-grid">
+            {lecturers.map(l => (
+              <div key={l.id} className="instructor-card" onClick={() => navigate(`/giang-vien/${l.id}`)}>
+                <div className="instructor-photo">
+                  {l.avatar_url
+                    ? <img src={l.avatar_url} alt={l.full_name} />
+                    : <span className="instructor-initials">{l.full_name?.trim()?.[0]?.toUpperCase() || 'GV'}</span>}
+                  <span className="instructor-badge">GIÁO VIÊN</span>
+                </div>
+                <div className="instructor-info">
+                  <h3>{l.full_name}</h3>
+                  <p className="instructor-headline">{l.headline || 'Giáo viên E-Learning AI'}</p>
+                  <div className="instructor-stats">
+                    <span>📚 {l.course_count} khóa học</span>
+                    {Number(l.student_count) > 0 && <span>👥 {l.student_count} học viên</span>}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
       {/* COURSES */}
       <section className="home-section courses-section" id="courses">
         <h2 className="section-title">Khóa học nổi bật</h2>
-        <p className="section-subtitle">Các khóa học được thiết kế bởi giảng viên hàng đầu</p>
+        <p className="section-subtitle">Các khóa học được thiết kế bởi giáo viên hàng đầu</p>
         <div className="home-courses-grid">
           {courses.map(c => (
             <div key={c.id} className="home-course-card" onClick={() => handleCourseClick(c.id)}>
@@ -418,7 +502,7 @@ export default function HomePage() {
               </div>
               <div className="course-body">
                 <h3>{c.title}</h3>
-                <p className="course-desc">{c.description?.substring(0, 80)}...</p>
+                <p className="course-desc">{(c.short_description || c.description || '').substring(0, 80)}...</p>
                 <div className="course-meta">
                   <span className="course-lecturer">👤 {c.lecturer_name}</span>
                   <span className={`badge ${c.status === 'published' ? 'badge-success' : 'badge-warning'}`}>
@@ -427,7 +511,7 @@ export default function HomePage() {
                 </div>
                 <div className="course-footer">
                   <span className="course-price">{Number(c.price).toLocaleString('vi-VN')}đ</span>
-                  <span className="course-action">Xem chi tiết →</span>
+                  <span className="course-action">Xem thông tin khóa học →</span>
                 </div>
               </div>
             </div>
@@ -481,7 +565,7 @@ export default function HomePage() {
       </footer>
 
       {/* AI CHATBOT TƯ VẤN KHÓA HỌC */}
-      <ChatbotWidget />
+      <ChatbotWidget onCourseClick={handleCourseClick} />
     </div>
   );
 }

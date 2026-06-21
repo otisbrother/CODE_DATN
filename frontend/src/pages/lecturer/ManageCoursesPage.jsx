@@ -10,10 +10,12 @@ export default function ManageCoursesPage() {
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [msg, setMsg] = useState('');
+  const [search, setSearch] = useState('');
+  const [page, setPage] = useState(1);
   const [showModal, setShowModal] = useState(false);
   const [deleteCourse, setDeleteCourse] = useState(null);
   const [editId, setEditId] = useState(null);
-  const [form, setForm] = useState({ title: '', description: '', short_description: '', price: 0, status: 'draft' });
+  const [form, setForm] = useState({ title: '', description: '', short_description: '', price: 0, status: 'draft', duration_days: '' });
   const [thumbnailFile, setThumbnailFile] = useState(null);
   const [introVideoFile, setIntroVideoFile] = useState(null);
   const [thumbnailPreview, setThumbnailPreview] = useState('');
@@ -31,7 +33,7 @@ export default function ManageCoursesPage() {
 
   const openCreate = () => {
     setEditId(null);
-    setForm({ title: '', description: '', short_description: '', price: 0, status: 'draft' });
+    setForm({ title: '', description: '', short_description: '', price: 0, status: 'draft', duration_days: '' });
     setThumbnailFile(null);
     setIntroVideoFile(null);
     setThumbnailPreview('');
@@ -47,6 +49,7 @@ export default function ManageCoursesPage() {
       short_description: c.short_description || '',
       price: c.price,
       status: c.status,
+      duration_days: c.duration_days || '',
     });
     setThumbnailFile(null);
     setIntroVideoFile(null);
@@ -80,6 +83,7 @@ export default function ManageCoursesPage() {
       formData.append('short_description', form.short_description);
       formData.append('price', form.price);
       formData.append('status', form.status);
+      formData.append('duration_days', form.duration_days || '');
       if (thumbnailFile) formData.append('thumbnail', thumbnailFile);
       if (introVideoFile) formData.append('intro_video', introVideoFile);
 
@@ -114,11 +118,24 @@ export default function ManageCoursesPage() {
 
   if (loading) return <div className="loading">Đang tải...</div>;
 
+  // Tìm kiếm không phân biệt hoa thường và dấu tiếng Việt (theo tên hoặc ID)
+  const normalize = (s) => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
+  const keyword = normalize(search);
+  const filteredCourses = keyword
+    ? courses.filter((c) => normalize(c.title).includes(keyword) || String(c.id) === keyword)
+    : courses;
+
+  // Phân trang 10 khóa học / trang
+  const PAGE_SIZE = 10;
+  const totalPages = Math.max(1, Math.ceil(filteredCourses.length / PAGE_SIZE));
+  const safePage = Math.min(page, totalPages); // tự kẹp lại khi danh sách thu nhỏ (lọc/xóa)
+  const pageCourses = filteredCourses.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
+
   return (
     <div>
       <div className="page-header">
         <h1>Quản lý khóa học</h1>
-        <button className="btn btn-primary" onClick={openCreate}>+ Tạo khóa học</button>
+        <button className="btn btn-primary" onClick={openCreate}>+ Thêm khóa học</button>
       </div>
       {msg && <div className="alert alert-success">{msg}</div>}
 
@@ -127,7 +144,7 @@ export default function ManageCoursesPage() {
         <div className="modal-overlay" onClick={() => setShowModal(false)}>
           <div className="modal-content modal-lg" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
-              <h3>{editId ? 'Chỉnh sửa khóa học' : 'Tạo khóa học mới'}</h3>
+              <h3>{editId ? 'Chỉnh sửa khóa học' : 'Thêm khóa học mới'}</h3>
               <button className="modal-close" onClick={() => setShowModal(false)}>×</button>
             </div>
             <form onSubmit={handleSubmit}>
@@ -161,8 +178,16 @@ export default function ManageCoursesPage() {
                     <option value="draft">Bản nháp</option><option value="published">Xuất bản</option><option value="archived">Lưu trữ</option>
                   </select></div>
               </div>
+              <div className="form-group">
+                <label>Thời hạn khóa học (ngày)</label>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <input type="number" className="form-control" value={form.duration_days} onChange={(e) => setForm({ ...form, duration_days: e.target.value })} min={0} placeholder="Để trống = Vĩnh viễn" style={{ flex: 1 }} />
+                  <span style={{ color: 'var(--text-muted)', fontSize: 13, whiteSpace: 'nowrap' }}>{form.duration_days ? `${form.duration_days} ngày` : '♾️ Vĩnh viễn'}</span>
+                </div>
+                <small style={{ color: 'var(--text-muted)' }}>Số ngày học viên được truy cập sau khi đăng ký. Để trống = không giới hạn.</small>
+              </div>
               <div className="modal-actions">
-                <button type="submit" className="btn btn-primary">{editId ? 'Cập nhật' : 'Tạo khóa học'}</button>
+                <button type="submit" className="btn btn-primary">{editId ? 'Cập nhật' : 'Thêm khóa học'}</button>
                 <button type="button" className="btn btn-outline" onClick={() => setShowModal(false)}>Hủy</button>
               </div>
             </form>
@@ -190,13 +215,32 @@ export default function ManageCoursesPage() {
         </div>
       )}
 
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
+        <div style={{ position: 'relative', maxWidth: 380, flex: 1 }}>
+          <span style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)', pointerEvents: 'none' }}>🔍</span>
+          <input
+            type="search"
+            className="form-control"
+            placeholder="Tìm khóa học theo tên hoặc ID..."
+            value={search}
+            onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+            style={{ paddingLeft: 36 }}
+          />
+        </div>
+        {keyword && (
+          <span style={{ color: 'var(--text-secondary)', fontSize: 14, whiteSpace: 'nowrap' }}>
+            {filteredCourses.length} / {courses.length} khóa học
+          </span>
+        )}
+      </div>
+
       <div className="table-container">
         <table>
           <thead>
-            <tr><th>ID</th><th>Ảnh</th><th>Tên khóa học</th><th>Giá</th><th>Trạng thái</th><th>Ngày tạo</th><th>Thao tác</th></tr>
+            <tr><th>ID</th><th>Ảnh</th><th>Tên khóa học</th><th>Giá</th><th>Thời hạn</th><th>Trạng thái</th><th>Ngày tạo</th><th>Thao tác</th></tr>
           </thead>
           <tbody>
-            {courses.map((c) => (
+            {pageCourses.map((c) => (
               <tr key={c.id}>
                 <td>{c.id}</td>
                 <td>
@@ -208,6 +252,7 @@ export default function ManageCoursesPage() {
                 </td>
                 <td><strong>{c.title}</strong></td>
                 <td>{Number(c.price).toLocaleString('vi-VN')}đ</td>
+                <td>{c.duration_days ? <span style={{ color: 'var(--accent-secondary)', fontWeight: 600 }}>{c.duration_days} ngày</span> : <span style={{ color: 'var(--text-muted)' }}>♾️ Vĩnh viễn</span>}</td>
                 <td><span className={`badge ${c.status === 'published' ? 'badge-success' : c.status === 'archived' ? 'badge-secondary' : 'badge-warning'}`}>{c.status === 'published' ? 'Xuất bản' : c.status === 'archived' ? 'Lưu trữ' : 'Nháp'}</span></td>
                 <td>{new Date(c.created_at).toLocaleDateString('vi-VN')}</td>
                 <td>
@@ -215,7 +260,7 @@ export default function ManageCoursesPage() {
                     <button className="btn btn-outline btn-sm" onClick={() => openEdit(c)}>Sửa</button>
                     <Link to={`/lecturer/courses/${c.id}/lessons`} className="btn btn-primary btn-sm">Bài học</Link>
                     <Link to={`/lecturer/courses/${c.id}/assignments`} className="btn btn-outline btn-sm">Bài tập</Link>
-                    <Link to={`/lecturer/courses/${c.id}/progress`} className="btn btn-outline btn-sm">Tiến độ</Link>
+                    <Link to={`/lecturer/courses/${c.id}/assignments?final=1`} className="btn btn-outline btn-sm" style={{ borderColor: '#4f46e5', color: '#4f46e5' }}>🏁 Test cuối khóa</Link>
                     <button className="btn btn-danger btn-sm" onClick={() => setDeleteCourse(c)}>Xóa</button>
                   </div>
                 </td>
@@ -224,7 +269,30 @@ export default function ManageCoursesPage() {
           </tbody>
         </table>
       </div>
+
+      {/* Phân trang: chỉ hiện khi có nhiều hơn 1 trang (trên 10 khóa học) */}
+      {totalPages > 1 && (
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 6, marginTop: 20, flexWrap: 'wrap' }}>
+          <button className="btn btn-outline btn-sm" disabled={safePage === 1} onClick={() => setPage(safePage - 1)}>‹ Trước</button>
+          {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
+            <button
+              key={p}
+              className={`btn btn-sm ${p === safePage ? 'btn-primary' : 'btn-outline'}`}
+              onClick={() => setPage(p)}
+              style={{ minWidth: 38 }}
+            >{p}</button>
+          ))}
+          <button className="btn btn-outline btn-sm" disabled={safePage === totalPages} onClick={() => setPage(safePage + 1)}>Sau ›</button>
+          <span style={{ color: 'var(--text-secondary)', fontSize: 13, marginLeft: 8 }}>
+            Trang {safePage}/{totalPages} · {filteredCourses.length} khóa học
+          </span>
+        </div>
+      )}
+
       {courses.length === 0 && <p style={{ color: 'var(--text-secondary)', marginTop: 20 }}>Chưa có khóa học nào.</p>}
+      {courses.length > 0 && filteredCourses.length === 0 && (
+        <p style={{ color: 'var(--text-secondary)', marginTop: 20 }}>Không tìm thấy khóa học phù hợp với “{search}”.</p>
+      )}
     </div>
   );
 }

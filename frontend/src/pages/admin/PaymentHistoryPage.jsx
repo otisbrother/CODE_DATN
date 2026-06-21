@@ -106,6 +106,7 @@ export default function PaymentHistoryPage() {
                 <th>Email</th>
                 <th>Khóa học</th>
                 <th>Số tiền</th>
+                <th>Voucher</th>
                 <th>Phương thức</th>
                 <th>Trạng thái</th>
                 <th>Ngày TT</th>
@@ -119,7 +120,15 @@ export default function PaymentHistoryPage() {
                   <td style={{ fontSize: 13, color: 'var(--text-secondary)' }}>{p.user_email}</td>
                   <td>{p.course_title || '—'}</td>
                   <td style={{ fontWeight: 700 }}>{Number(p.total_amount).toLocaleString('vi-VN')}đ</td>
-                  <td>{p.payment_method === 'bank_transfer' ? '🏦 CK' : p.payment_method === 'free' ? '🎁 Miễn phí' : p.payment_method}</td>
+                  <td style={{ fontSize: 12 }}>
+                    {p.voucher_code ? (
+                      <span>
+                        <strong>{p.voucher_code}</strong><br />
+                        <span style={{ color: 'var(--success)' }}>-{Number(p.discount_amount || 0).toLocaleString('vi-VN')}đ</span>
+                      </span>
+                    ) : '—'}
+                  </td>
+                  <td>{p.payment_method === 'bank_transfer' ? '🏦 CK' : p.payment_method === 'free' ? '🎁 Miễn phí' : p.payment_method === 'voucher' ? '🏷️ Voucher' : p.payment_method}</td>
                   <td><span className={`badge ${statusBadge(p.payment_status)}`}>{statusLabel(p.payment_status)}</span></td>
                   <td style={{ fontSize: 12, color: 'var(--text-muted)' }}>
                     {p.paid_at ? new Date(p.paid_at).toLocaleString('vi-VN') : '—'}
