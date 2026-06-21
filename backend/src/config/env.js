@@ -11,6 +11,9 @@ module.exports = {
   JWT_EXPIRES_IN: process.env.JWT_EXPIRES_IN || '7d',
   GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID || '',
   OPENAI_API_KEY: process.env.OPENAI_API_KEY || '',
+  GEMINI_API_KEY: process.env.GEMINI_API_KEY || '',
+  GEMINI_MODEL: process.env.GEMINI_MODEL || 'gemini-2.5-flash',
+  GEMINI_LEARNING_MODEL: process.env.GEMINI_LEARNING_MODEL || '',
   SMTP_HOST: process.env.SMTP_HOST || 'smtp.gmail.com',
   SMTP_PORT: process.env.SMTP_PORT || 587,
   SMTP_USER: process.env.SMTP_USER || '',
@@ -23,6 +26,6 @@ module.exports = {
   ADMIN_BANK_BIN: process.env.ADMIN_BANK_BIN || '970422',
   ADMIN_BANK_ACCOUNT_NO: process.env.ADMIN_BANK_ACCOUNT_NO || '0395256163',
   ADMIN_BANK_ACCOUNT_NAME: process.env.ADMIN_BANK_ACCOUNT_NAME || 'NGUYEN HUY TOA',
+  SEPAY_WEBHOOK_SECRET: process.env.SEPAY_WEBHOOK_SECRET || process.env.BANK_WEBHOOK_SECRET || '',
   BANK_WEBHOOK_SECRET: process.env.BANK_WEBHOOK_SECRET || '',
-  N8N_CHATBOT_WEBHOOK_URL: process.env.N8N_CHATBOT_WEBHOOK_URL || '',
 };

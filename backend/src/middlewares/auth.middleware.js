@@ -39,4 +39,29 @@ const authMiddleware = async (req, res, next) => {
   }
 };
 
+// Xac thuc tuy chon: neu co token hop le thi gan req.user, neu khong van cho qua.
+// Dung cho cac route cong khai nhung can biet danh tinh de loc noi dung.
+const optionalAuthMiddleware = async (req, res, next) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) return next();
+
+    const token = authHeader.split(' ')[1];
+    const decoded = jwt.verify(token, jwtConfig.secret);
+    const [rows] = await db.query(
+      `SELECT u.id, u.full_name, u.email, u.status, u.role_id, r.role_name
+       FROM users u JOIN roles r ON u.role_id = r.id
+       WHERE u.id = ?`,
+      [decoded.id]
+    );
+    if (rows.length > 0 && rows[0].status === 'active') {
+      req.user = rows[0];
+    }
+  } catch (error) {
+    // Token loi/het han -> coi nhu khach, khong chan
+  }
+  return next();
+};
+
 module.exports = authMiddleware;
+module.exports.optional = optionalAuthMiddleware;

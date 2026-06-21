@@ -10,7 +10,7 @@ const findByEmail = async (email) => {
 
 const findById = async (id) => {
   const [rows] = await db.query(
-    `SELECT u.id, u.full_name, u.email, u.status, u.role_id, u.created_at, r.role_name
+    `SELECT u.id, u.full_name, u.email, u.status, u.role_id, u.created_at, u.avatar_url, r.role_name
      FROM users u JOIN roles r ON u.role_id = r.id WHERE u.id = ?`,
     [id]
   );

@@ -34,6 +34,17 @@ const courseStorage = multer.diskStorage({
   },
 });
 
+// Avatar uploads (anh dai dien giang vien)
+const avatarStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, path.join(__dirname, '../../uploads/avatars'));
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, uniqueSuffix + path.extname(file.originalname));
+  },
+});
+
 // Lesson video uploads
 const lessonVideoStorage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -88,4 +99,18 @@ const uploadLessonVideo = multer({
   },
 });
 
-module.exports = { uploadMaterial, uploadAiData, uploadCourse, uploadLessonVideo };
+const uploadAvatar = multer({
+  storage: avatarStorage,
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
+  fileFilter: (req, file, cb) => {
+    const allowedImage = /jpeg|jpg|png|gif|webp/;
+    const ext = path.extname(file.originalname).toLowerCase().replace('.', '');
+    if (allowedImage.test(ext)) {
+      cb(null, true);
+    } else {
+      cb(new Error('Chỉ chấp nhận ảnh (jpg, png, gif, webp)'));
+    }
+  },
+});
+
+module.exports = { uploadMaterial, uploadAiData, uploadCourse, uploadLessonVideo, uploadAvatar };

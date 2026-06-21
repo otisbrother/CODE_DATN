@@ -13,6 +13,9 @@ const sectionsRoutes = require('./sections.routes');
 const adminStatsRoutes = require('./admin.stats.routes');
 const paymentsRoutes = require('./payments.routes');
 const chatbotRoutes = require('./chatbot.routes');
+const vouchersRoutes = require('./vouchers.routes');
+const reviewsRoutes = require('./reviews.routes');
+const lecturersRoutes = require('./lecturers.routes');
 
 router.use('/auth', authRoutes);
 router.use('/users', usersRoutes);
@@ -26,5 +29,8 @@ router.use('/sections', sectionsRoutes);
 router.use('/admin', adminStatsRoutes);
 router.use('/payments', paymentsRoutes);
 router.use('/chatbot', chatbotRoutes);
+router.use('/vouchers', vouchersRoutes);
+router.use('/reviews', reviewsRoutes);
+router.use('/lecturers', lecturersRoutes);
 
 module.exports = router;

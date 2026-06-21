@@ -15,6 +15,11 @@ const getById = asyncHandler(async (req, res) => {
   return ApiResponse.success(res, user);
 });
 
+const createLecturer = asyncHandler(async (req, res) => {
+  const user = await usersService.createLecturer(req.body);
+  return ApiResponse.created(res, user, 'Tạo tài khoản giáo viên thành công');
+});
+
 const update = asyncHandler(async (req, res) => {
   const user = await usersService.update(req.params.id, req.body);
   return ApiResponse.success(res, user, 'Cập nhật người dùng thành công');
@@ -25,4 +30,4 @@ const remove = asyncHandler(async (req, res) => {
   return ApiResponse.success(res, null, 'Khóa tài khoản thành công');
 });
 
-module.exports = { getAll, getById, update, remove };
+module.exports = { getAll, getById, createLecturer, update, remove };

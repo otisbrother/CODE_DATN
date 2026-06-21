@@ -10,7 +10,13 @@ const buildAuthPayload = (user) => {
   });
 
   return {
-    user: { id: user.id, full_name: user.full_name, email: user.email, role: user.role_name },
+    user: {
+      id: user.id,
+      full_name: user.full_name,
+      email: user.email,
+      role: user.role_name,
+      avatar_url: user.avatar_url || null,
+    },
     token,
   };
 };

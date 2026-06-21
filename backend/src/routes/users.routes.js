@@ -6,6 +6,7 @@ const roleMiddleware = require('../middlewares/role.middleware');
 
 router.use(authMiddleware);
 router.get('/', roleMiddleware('admin'), usersController.getAll);
+router.post('/lecturers', roleMiddleware('admin'), usersController.createLecturer);
 router.get('/:id', roleMiddleware('admin'), usersController.getById);
 router.put('/:id', roleMiddleware('admin'), usersController.update);
 router.delete('/:id', roleMiddleware('admin'), usersController.remove);
